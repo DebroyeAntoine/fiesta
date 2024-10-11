@@ -1,1 +1,18 @@
 venv/\n__pycache__/\n*.pyc\n*.pyo\n*.log\n.DS_Store
+# Environnement virtuel Python
+venv/
+__pycache__/
+
+# Dépendances Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+*.log
+*.pid
+*.env
+
+# Systèmes
+.DS_Store
+
