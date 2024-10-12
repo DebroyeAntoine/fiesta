@@ -8,6 +8,7 @@ const Register = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        console.warn("test");
         const response = await fetch('/register', {
             method: 'POST',
             headers: {

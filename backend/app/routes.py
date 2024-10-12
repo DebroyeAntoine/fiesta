@@ -53,3 +53,15 @@ def delete_all():
     except Exception as e:
         db.session.rollback()  # En cas d'erreur, on annule les changements
         return jsonify({"error": str(e)}), 500
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+    if user and bcrypt.check_password_hash(user.password, password):
+        return jsonify({"message": "Login successful!"}), 200
+    else:
+        return jsonify({"message": "Invalid username or password."}), 401
