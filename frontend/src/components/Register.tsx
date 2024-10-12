@@ -20,6 +20,16 @@ const Register = () => {
         setMessage(data.message);
     };
 
+
+    const handleDelete = async () => {
+        const response = await fetch('/delete', {
+            method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        setMessage(data.message);
+    };
+
     return (
         <div>
             <h2>Register</h2>
@@ -41,6 +51,7 @@ const Register = () => {
                     />
                 </div>
                 <button type="submit">Register</button>
+                <button type="button" onClick={handleDelete}>Delete all users</button>
             </form>
             {message && <p>{message}</p>}
         </div>

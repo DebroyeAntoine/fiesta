@@ -42,3 +42,14 @@ def register():
 
     return jsonify({"message": "User created successfully."}), 201
 
+@auth_bp.route('/delete', methods=['DELETE'])
+def delete_all():
+    print("delete")
+    try:
+        # Supprimer tous les utilisateurs
+        db.session.query(User).delete()
+        db.session.commit()
+        return jsonify({"message": "Tous les utilisateurs ont été supprimés."}), 200
+    except Exception as e:
+        db.session.rollback()  # En cas d'erreur, on annule les changements
+        return jsonify({"error": str(e)}), 500
