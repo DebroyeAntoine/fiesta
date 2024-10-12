@@ -1,26 +1,19 @@
-// src/App.tsx
-import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import GameBoard from './components/GameBoard';
-import './styles.css';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import Home from './pages/Home'; // Page d'accueil
+import RegisterPage from './pages/RegisterPage'; // Page d'inscription
 
-const App: React.FC = () => {
-    const [message, setMessage] = useState<string>('');
-
-    useEffect(() => {
-        fetch('http://127.0.0.1:5000/')
-            .then(res => res.json())
-            .then(data => setMessage(data.message))
-            .catch(error => console.error('Error fetching data:', error));
-    }, []);
-
-    return (
-        <div className="App">
-            <Header message={message} />
-            <GameBoard />
-        </div>
-    );
-}
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/register" element={<RegisterPage />} />
+        {/* Ajoute d'autres routes ici */}
+      </Routes>
+    </Router>
+  );
+};
 
 export default App;
 
