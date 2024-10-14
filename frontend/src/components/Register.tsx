@@ -1,14 +1,8 @@
-// frontend/src/Register.js
-import React, { useState } from 'react';
+import React from 'react';
+import AuthForm from './AuthForm';
 
-const Register = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        console.warn("test");
+const Register: React.FC = () => {
+    const handleRegister = async (username: string, password: string) => {
         const response = await fetch('/register', {
             method: 'POST',
             headers: {
@@ -16,47 +10,23 @@ const Register = () => {
             },
             body: JSON.stringify({ username, password }),
         });
-        
-        const data = await response.json();
-        setMessage(data.message);
+
+        if (!response.ok) {
+            throw new Error('Failed to register');
+        }
     };
 
-
-    const handleDelete = async () => {
+    const handleDeleteUsers = async () => {
         const response = await fetch('/delete', {
             method: 'DELETE',
         });
-        
-        const data = await response.json();
-        setMessage(data.message);
+
+        if (!response.ok) {
+            throw new Error('Failed to delete users');
+        }
     };
 
-    return (
-        <div>
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username:</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                <button type="submit">Register</button>
-                <button type="button" onClick={handleDelete}>Delete all users</button>
-            </form>
-            {message && <p>{message}</p>}
-        </div>
-    );
+    return <AuthForm onSubmit={handleRegister} onDeleteUsers={handleDeleteUsers} isRegister={true} />;
 };
 
 export default Register;

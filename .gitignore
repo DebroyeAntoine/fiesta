@@ -3,6 +3,8 @@ venv/\n__pycache__/\n*.pyc\n*.pyo\n*.log\n.DS_Store
 venv/
 __pycache__/
 
+backend/instance
+
 # Dépendances Node.js
 node_modules/
 npm-debug.log
