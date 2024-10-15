@@ -1,5 +1,9 @@
 from flask import jsonify, Blueprint, request
+from flask_jwt_extended import create_access_token
 from app.models import db, User, bcrypt
+import random
+
+characters = ["test", "test2"]
 # Pas besoin de créer une nouvelle instance ici
 # app = create_app()  # Cette ligne est à retirer
 bp = Blueprint("api", __name__)
@@ -62,6 +66,7 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
-        return jsonify({"message": "Login successful!"}), 200
+        access_token = create_access_token(identity=user.id)
+        return jsonify({"message": "Login successful!", 'token': access_token}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401

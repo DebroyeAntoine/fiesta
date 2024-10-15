@@ -10,9 +10,13 @@ const Login: React.FC = () => {
             },
             body: JSON.stringify({ username, password }),
         });
+        const data = await response.json();
 
         if (!response.ok) {
             throw new Error('Failed to login');
+        } else {
+        // Stocker le token JWT
+            localStorage.setItem('token', data.token);
         }
     };
 
