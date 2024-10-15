@@ -29,7 +29,7 @@ const GameTable = () => {
         ))}
       </div>
     </div>
-);
+  );
 };
 
 export default GameTable;
