@@ -70,3 +70,80 @@ def login():
         return jsonify({"message": "Login successful!", 'token': access_token}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
+
+game_bp = Blueprint('game', __name__)
+
+@game_bp.route(('/round/<int:round_id>/player/<int:player_id>/submit_word', methods=['POST'])
+@jwt_required()
+def submit_word(round_id, player_id):
+    round = Round.query.get_or_404(round_id)
+    player = Player.query.get_or_404(player_id)
+
+    # Assure que ce joueur fait bien partie de ce jeu
+    if player.game_id != round.game_id:
+        return jsonify({"message": "Player not in this game"}), 403
+
+    data = request.get_json()
+    word = data.get('word')
+
+    if not word:
+        return jsonify({"message": "Word is required"}), 400
+
+    # Vérifie si ce joueur a déjà soumis un mot pour ce round
+    player_round = PlayerRound.query.filter_by(round_id=round_id, player_id=player_id).first()
+
+    if player_round:
+        player_round.word_submitted = word  # Met à jour le mot si déjà soumis
+    else:
+        # Crée un nouvel enregistrement si ce joueur n'a pas encore soumis de mot
+        player_round = PlayerRound(
+            round_id=round_id,
+            player_id=player_id,
+            word_submitted=word
+        )
+        db.session.add(player_round)
+
+    db.session.commit()
+
+    return jsonify({"message": f"Word submitted by Player {player_id} for Round {round_id}"}), 200
+
+@game_bp.route('/round/<int:round_id>/check_completion', methods=['GET'])
+@jwt_required()
+def check_round_completion(round_id):
+    round = Round.query.get_or_404(round_id)
+    player_rounds = PlayerRound.query.filter_by(round_id=round.id).all()
+
+    # Récupère tous les joueurs du jeu actuel
+    players = Player.query.filter_by(game_id=round.game_id).all()
+
+    # Vérifie si tous les joueurs ont soumis leurs mots
+    if len(player_rounds) == len(players):
+        return jsonify({"message": "All players have submitted their words"}), 200
+    else:
+        return jsonify({"message": "Waiting for more players to submit their words"}), 200
+
+@game_bp.route('/game/<int:game_id>/advance_round', methods=['POST'])
+@jwt_required()
+def advance_round(game_id):
+    game = Game.query.get_or_404(game_id)
+
+    # Vérifie si tous les rounds sont complétés
+    if game.current_round > 4:
+        return jsonify({"message": "Game over"}), 200
+
+    # Vérifie si tous les joueurs ont soumis leurs mots pour le round en cours
+    current_round = Round.query.filter_by(game_id=game.id, number=game.current_round).first()
+    player_rounds = PlayerRound.query.filter_by(round_id=current_round.id).all()
+    players = Player.query.filter_by(game_id=game.id).all()
+
+    if len(player_rounds) < len(players):
+        return jsonify({"message": "Not all players have submitted their words"}), 400
+
+    # Avance au round suivant
+    game.current_round += 1
+    db.session.commit()
+
+    return jsonify({"message": f"Advanced to Round {game.current_round}"}), 200
+
+
+
