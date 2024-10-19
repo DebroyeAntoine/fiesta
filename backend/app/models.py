@@ -10,7 +10,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
 
-    players = db.relationship('Player', backref='user', lazy=True)
+    # Relation avec les parties où cet utilisateur est impliqué
+    games = db.relationship('Player', backref='user', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -23,6 +24,8 @@ class PlayerRound(db.Model):
     round_id = db.Column(db.Integer, db.ForeignKey('round.id'), nullable=False)  # Lien vers le round
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)  # Lien vers le joueur
     word_submitted = db.Column(db.String(100), nullable=True)  # Le mot soumis par ce joueur
+    #character = db.Column(db.String(120), nullable=False)  # Personnage incarné par le joueur
+    initial_word = db.Column(db.String(100), nullable=False)  # Mot initial assigné au début de la partie
 
     def __repr__(self):
         return f"<PlayerRound Player {self.player_id}, Round {self.round_id}, Word: {self.word_submitted}>"
@@ -32,7 +35,6 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     number = db.Column(db.Integer, nullable=False)  # Le numéro du round (1, 2, 3...)
-    initial_word = db.Column(db.String(100), nullable=False)  # Le mot initial donné au round
     player_rounds = db.relationship('PlayerRound', backref='round', lazy=True)  # Les mots soumis par les joueurs
 
     def __repr__(self):
@@ -47,10 +49,13 @@ class Game(db.Model):
 
 class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    character = db.Column(db.String(120), nullable=False)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)  # Lien vers Game
-
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Lien vers l'utilisateur global
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)  # Lien vers la partie
+    
+    @property
+    def username(self):
+        return User.query.get(self.user_id).username    
+    # Relation avec les actions du joueur dans les rounds
+    player_rounds = db.relationship('PlayerRound', backref='player', lazy=True)
     def __repr__(self):
         return f'<Player {self.user.username} playing as {self.character}>'

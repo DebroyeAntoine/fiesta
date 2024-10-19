@@ -57,6 +57,38 @@ def delete_all():
         db.session.rollback()  # En cas d'erreur, on annule les changements
         return jsonify({"error": str(e)}), 500
 
+def tmp_create_game_and_player(user):
+    # Vérifier si la Game 1 existe déjà
+    game = Game.query.filter_by(id=1).first()
+    
+    if not game:
+        # Si la Game 1 n'existe pas encore, on la crée
+        game = Game(id=1, current_round=1)
+        db.session.add(game)
+        db.session.commit()
+
+        # Créer les 4 rounds pour cette partie (ou le nombre souhaité)
+        for round_number in range(1, 5):  # Par exemple, 4 rounds
+            new_round = Round(game_id=game.id, number=round_number)
+            db.session.add(new_round)
+        db.session.commit()
+
+    # Ajouter le joueur à cette partie s'il n'est pas déjà dans la game
+    player = Player.query.filter_by(user_id=user.id, game_id=game.id).first()
+    if not player:
+        # Si l'utilisateur n'est pas encore un joueur dans cette partie, on le crée
+        #character = random.choice(DEFAULT_WORDS)  # Exemple simple pour choisir un "personnage"
+        player = Player(user_id=user.id, game_id=game.id)#, character=character)
+        db.session.add(player)
+        db.session.commit()
+
+        # Assigner un mot initial pour ce joueur au premier round
+        initial_word = "test"  # Mot initial pour le joueur (aléatoire pour le moment)
+        first_round = Round.query.filter_by(game_id=game.id, number=1).first()
+        player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
+        db.session.add(player_round)
+        db.session.commit()
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -66,6 +98,7 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
+        tmp_create_game_and_player(user)
         return jsonify({"message": "Login successful!", 'token': access_token, 'gameId': "1", "roundId":"1", "playerId": str(user.id)}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401

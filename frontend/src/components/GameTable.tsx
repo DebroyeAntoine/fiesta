@@ -17,6 +17,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   const [word, setWord] = useState('');  // Le mot ou l'indice affiché sur la carte tête de mort
   const [players, setPlayers] = useState<Player[]>([]);
   const [submittedPlayers, setSubmittedPlayers] = useState<string[]>([]);  // IDs des joueurs ayant soumis leur mot
+  const [loading, setLoading] = useState(true); // État de chargement
 
   const handleValidate = async () => {
     try {
@@ -59,6 +60,8 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des joueurs:', error);
+      } finally {
+        setLoading(false); // Arrête le chargement, que la requête réussisse ou échoue
       }
     };
 
@@ -89,13 +92,14 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
  
     useEffect(() => {
     // Vérifie si tous les joueurs ont validé leur mot
-    if (submittedPlayers.length === players.length) {
+    if (submittedPlayers.length === players.length && players.length >0) {
       console.log('Tous les joueurs ont soumis leur mot ! Passons au round suivant.');
       goToNextRound();  // Appelle la fonction pour avancer au round suivant
     }
   }, [submittedPlayers, players, goToNextRound]);  // Le hook se déclenchera à chaque fois que submittedPlayers change
-
-
+  if (loading) {
+    return <div>Chargement des joueurs...</div>; // Vous pouvez remplacer ceci par un spinner ou un autre composant de chargement
+  }
   return (
     <div className="game-table relative w-full h-screen flex justify-center items-center">
       <div className="center-skull-card absolute bottom-10">
@@ -103,7 +107,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
       </div>
 
       <div className="player-circle grid grid-cols-4 gap-4">
-        {players.map((player) => (
+        {Array.isArray(players) && players.map((player) => (
            <PlayerAvatar
              key={player.id}
              player={{ id: player.id, username: player.username }}
