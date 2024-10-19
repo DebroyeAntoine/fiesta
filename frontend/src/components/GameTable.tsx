@@ -8,22 +8,20 @@ interface GameTableProps {
   roundId: string;
 }
 
+interface Player {
+  id: string;  // Assumons que l'ID soit de type string
+  username: string;
+}
+
 const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   const [word, setWord] = useState('');  // Le mot ou l'indice affiché sur la carte tête de mort
-  const [players, setPlayers] = useState([
-    { id: 1, name: 'Player 1', hasSubmitted: false },
-    { id: 2, name: 'Player 2', hasSubmitted: false },
-    { id: 3, name: 'Player 3', hasSubmitted: false },
-    { id: 4, name: 'Player 4', hasSubmitted: false },
-  ]);
-  const [submittedPlayers, setSubmittedPlayers] = useState<number[]>([]);  // IDs des joueurs ayant soumis leur mot
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [submittedPlayers, setSubmittedPlayers] = useState<string[]>([]);  // IDs des joueurs ayant soumis leur mot
 
   const handleValidate = async () => {
     try {
       const token = localStorage.getItem('token');  // Assure-toi que tu récupères correctement le token
       /* TODO change with backend logical */
-      const roundId = 'id-du-round';  // Remplace par la logique pour obtenir le roundId
-      const playerId = 990;  // Remplace par l'ID du joueur actuel (peut être stocké dans le contexte de l'utilisateur)
   
       const response = await fetch(`/round/${roundId}/player/${playerId}/submit_word`, {
         method: 'POST',
@@ -42,6 +40,30 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
       console.error('Error submitting word:', error);
     }
   };
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`/game/${gameId}/players`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setPlayers(data);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des joueurs:', error);
+      }
+    };
+
+    fetchPlayers();
+  }, [gameId]);
   
   const goToNextRound = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -84,8 +106,8 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
         {players.map((player) => (
            <PlayerAvatar
              key={player.id}
-             player={player}
-             hasSubmitted={submittedPlayers.includes(player.id)}  // Check si le joueur a soumis son mot
+             player={{ id: player.id, username: player.username }}
+            hasSubmitted={submittedPlayers.includes(player.id)}  // Check si le joueur a soumis son mot
            />
         ))}
       </div>

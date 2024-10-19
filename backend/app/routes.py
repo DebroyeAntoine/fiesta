@@ -106,6 +106,13 @@ def submit_word(round_id, player_id):
 
     return jsonify({"message": f"Word submitted by Player {player_id} for Round {round_id}"}), 200
 
+@game_bp.route('/game/<int:game_id>/players', methods=['GET'])
+#@jwt_required
+def get_players(game_id):
+    print("coucou")
+    players = Player.query.filter_by(game_id=game_id).all()
+    return jsonify({"players": [{"id": player.id, "username": player.username} for player in players]})
+
 @game_bp.route('/round/<int:round_id>/check_completion', methods=['GET'])
 @jwt_required()
 def check_round_completion(round_id):

@@ -2,8 +2,8 @@ import React from 'react';
 
 interface PlayerAvatarProps {
   player: {
-    id: number;
-    name: string;
+    id: string;
+    username: string;
   };
   hasSubmitted: boolean;
 }
@@ -11,7 +11,7 @@ interface PlayerAvatarProps {
 const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, hasSubmitted }) => {
   return (
     <div className={`player-avatar ${hasSubmitted ? 'bg-green-400' : 'bg-gray-400'} p-4 rounded-full flex flex-col items-center`}>
-      <p className="text-white font-bold">{player.name}</p>
+      <p className="text-white font-bold">{player.username}</p>
       {!hasSubmitted ? (
         <span className="animate-bounce text-2xl">...</span>
       ) : (
