@@ -50,6 +50,7 @@ class Player(db.Model):
     character = db.Column(db.String(120), nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)  # Lien vers Game
 
     def __repr__(self):
         return f'<Player {self.user.username} playing as {self.character}>'
