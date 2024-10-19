@@ -1,6 +1,6 @@
 from flask import jsonify, Blueprint, request
-from flask_jwt_extended import create_access_token
-from app.models import db, User, bcrypt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game
 import random
 
 characters = ["test", "test2"]
@@ -13,13 +13,12 @@ def home():
     print("coucou")
     return jsonify({'message': 'Hello from Fiesta de los Muertos!'})
 
-@bp.route('/submit', methods=['POST'])
-def submit_word():
-    data = request.get_json()
-    word = data.get('word')
-    # Logique pour traiter le mot, par exemple, ajouter à une liste ou valider
-    return jsonify(message=f"Mot '{word}' reçu!")
-
+#@bp.route('/submit', methods=['POST'])
+#def submit_word():
+#    data = request.get_json()
+#    word = data.get('word')
+#    # Logique pour traiter le mot, par exemple, ajouter à une liste ou valider
+#    return jsonify(message=f"Mot '{word}' reçu!")
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -67,13 +66,13 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
-        return jsonify({"message": "Login successful!", 'token': access_token}), 200
+        return jsonify({"message": "Login successful!", 'token': access_token, 'gameId': "1", "roundId":"1", "playerId": str(user.id)}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
 
 game_bp = Blueprint('game', __name__)
 
-@game_bp.route(('/round/<int:round_id>/player/<int:player_id>/submit_word', methods=['POST'])
+@game_bp.route('/round/<int:round_id>/player/<int:player_id>/submit_word', methods=['POST'])
 @jwt_required()
 def submit_word(round_id, player_id):
     round = Round.query.get_or_404(round_id)
