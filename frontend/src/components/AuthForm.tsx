@@ -33,32 +33,48 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSubmit, onDeleteUsers, isRegister
     };
 
     return (
-        <div>
-            <h2>{isRegister ? "Register" : "Login"}</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username:</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                <button type="submit">{isRegister ? "Register" : "Login"}</button>
-            </form>
-            {onDeleteUsers && (
-                <button onClick={handleDeleteUsers}>Delete All Users</button>
-            )}
-            {message && <p>{message}</p>}
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-center mb-6">{isRegister ? "Register" : "Login"}</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+            >
+              {isRegister ? "Register" : "Login"}
+            </button>
+          </form>
+          {onDeleteUsers && (
+            <button
+              onClick={handleDeleteUsers}
+              className="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200"
+            >
+              Delete All Users
+            </button>
+          )}
+          {message && <p className="mt-4 text-center text-red-500">{message}</p>}
         </div>
+      </div>
     );
 };
 
