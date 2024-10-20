@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PlayerAvatar from './PlayerAvatar';
 import SkullCard from './SkullCard';
+import { io } from 'socket.io-client';
 
 interface GameTableProps {
   gameId: string;
@@ -43,31 +44,41 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   };
 
   useEffect(() => {
+    const socket = io('http://localhost:5000', {
+      transports: ['websocket'], // Utilise uniquement WebSocket
+    });
+    // Écoute les événements WebSocket pour les nouveaux joueurs
+    socket.on('update_player_list', (data) => {
+    // Le 'data' contient la liste des joueurs, on va la mettre à jour dans l'état
+      setPlayers(data.players); // Met à jour directement avec la nouvelle liste de joueurs
+    });// Écoute les événements lorsque des joueurs quittent
+    socket.on('player_left', (playerData: { id: number }) => {
+      setPlayers((prevPlayers) => prevPlayers.filter((player) => player.id !== playerData.id));
+    });
+
+    // Récupérer la liste des joueurs à l'initialisation
     const fetchPlayers = async () => {
       const token = localStorage.getItem('token');
-      try {
-        const response = await fetch(`/game/${gameId}/players`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setPlayers(data.players);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des joueurs:', error);
-      } finally {
-        setLoading(false); // Arrête le chargement, que la requête réussisse ou échoue
-      }
+      const response = await fetch(`/game/${gameId}/players`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      setPlayers(data.players);
+      setLoading(false);
     };
 
     fetchPlayers();
+
+    return () => {
+      socket.off('player_update');
+      socket.off('player_left');
+    };
   }, [gameId]);
-  
+
   const goToNextRound = useCallback(async () => {
     const token = localStorage.getItem('token');
     try {
@@ -89,44 +100,43 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
       console.error('Error advancing to next round:', error);
     }
   }, [roundId]);
- 
-    useEffect(() => {
+
+  useEffect(() => {
     // Vérifie si tous les joueurs ont validé leur mot
-    if (submittedPlayers.length === players.length && players.length >0) {
+    if (submittedPlayers.length === players.length && players.length > 0) {
       console.log('Tous les joueurs ont soumis leur mot ! Passons au round suivant.');
-      goToNextRound();  // Appelle la fonction pour avancer au round suivant
+      goToNextRound(); // Appelle la fonction pour avancer au round suivant
     }
-  }, [submittedPlayers, players, goToNextRound]);  // Le hook se déclenchera à chaque fois que submittedPlayers change
+  }, [submittedPlayers, players, goToNextRound]); // Le hook se déclenchera à chaque fois que submittedPlayers change
+
   if (loading) {
     return <div>Chargement des joueurs...</div>; // Vous pouvez remplacer ceci par un spinner ou un autre composant de chargement
   }
-  console.log(typeof(playerId));
+
   return (
     <div className="game-table relative w-full h-screen flex justify-center items-center">
       <div className="player-circle grid grid-cols-1 gap-4 w-full"> {/* Affichez 1 joueur par ligne */}
         {Array.isArray(players) && players.length > 0 ? (
-          players.map((player) => {
-            console.log(typeof(player.id))
-            return (
-              <div key={player.id} className="player-container flex flex-col items-center">
-                {/* Si c'est le joueur courant, affiche sa SkullCard */}
-                {player.id === playerId ? (
-                  <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
-                ) : (
-                  <PlayerAvatar
-                    player={{ id: player.id, username: player.username }}
-                    hasSubmitted={submittedPlayers.includes(player.id)}
-                  />
-                )}
-              </div>
-            );
-          })
+          players.map((player) => (
+            <div key={player.id} className="player-container flex flex-col items-center">
+              {/* Si c'est le joueur courant, affiche sa SkullCard */}
+              {player.id === playerId ? (
+                <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
+              ) : (
+                <PlayerAvatar
+                  player={{ id: player.id, username: player.username }}
+                  hasSubmitted={submittedPlayers.includes(player.id)}
+                />
+              )}
+            </div>
+          ))
         ) : (
-          <p>No players available</p>  // Fallback si aucun joueur n'est disponible
+          <p>No players available</p> // Fallback si aucun joueur n'est disponible
         )}
       </div>
     </div>
   );
 };
+
 export default GameTable;
 

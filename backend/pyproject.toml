@@ -13,6 +13,8 @@ flask-cors = "^5.0.0"
 flask-bcrypt = "^1.0.1"
 pyjwt = "^2.9.0"
 flask-jwt-extended = "^4.6.0"
+flask-socketio = "^5.4.1"
+eventlet = "^0.37.0"
 
 
 [build-system]

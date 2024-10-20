@@ -1,8 +1,9 @@
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game
+from app.socket import socketio
+from flask_socketio import emit, join_room, leave_room
 import random
-
 characters = ["test", "test2"]
 # Pas besoin de créer une nouvelle instance ici
 # app = create_app()  # Cette ligne est à retirer
@@ -88,7 +89,28 @@ def tmp_create_game_and_player(user):
         player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
         db.session.add(player_round)
         db.session.commit()
+    broadcast_player_list(game.id)
     return player
+
+
+# WebSocket event when a user joins a game room
+@socketio.on('join_game')
+def on_join_game(data):
+    game_id = data['game_id']
+    username = get_jwt_identity()  # Retrieve the current user based on JWT
+    join_room(f"game_{game_id}")  # User joins the room specific to their game
+
+    emit('user_joined', {'message': f'User {username} has joined the game'}, room=f"game_{game_id}")
+
+# WebSocket event when a user leaves a game room
+@socketio.on('leave_game')
+def on_leave_game(data):
+    game_id = data['game_id']
+    username = get_jwt_identity()  # Retrieve the current user based on JWT
+    leave_room(f"game_{game_id}")  # User leaves the room specific to their game
+
+    emit('user_left', {'message': f'User {username} has left the game'}, room=f"game_{game_id}")
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -139,6 +161,15 @@ def submit_word(round_id, player_id):
     db.session.commit()
 
     return jsonify({"message": f"Word submitted by Player {player_id} for Round {round_id}"}), 200
+
+def broadcast_player_list(game_id):
+    players = Player.query.filter_by(game_id=game_id).all()
+    player_data = [{"id": player.id, "username": player.username} for player in players]
+    # Emitting to the room corresponding to this game_id
+    try:
+      socketio.emit('update_player_list', {'players': player_data, 'num_players': len(player_data)})#, room=f"game_{game_id}")
+    except Exception as e:
+        print(e)
 
 @game_bp.route('/game/<int:game_id>/players', methods=['GET'])
 #@jwt_required
