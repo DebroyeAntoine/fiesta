@@ -10,12 +10,19 @@ interface PlayerAvatarProps {
 
 const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, hasSubmitted }) => {
   return (
-    <div className={`player-avatar ${hasSubmitted ? 'bg-green-400' : 'bg-gray-400'} p-4 rounded-full flex flex-col items-center`}>
-      <p className="text-white font-bold">{player.username}</p>
+    <div className={`player-avatar ${hasSubmitted ? 'bg-green-400' : 'bg-gray-400'}
+      p-4 w-24 h-24 rounded-full flex flex-col items-center justify-center
+      border-4 ${hasSubmitted ? 'border-green-600' : 'border-gray-500'}
+      shadow-lg transition-all duration-300 ease-in-out transform ${!hasSubmitted && 'hover:scale-105'}`}>
+
+      {/* Username */}
+      <p className="text-white font-bold text-center truncate w-20">{player.username}</p>
+
+      {/* Status Icon */}
       {!hasSubmitted ? (
-        <span className="animate-bounce text-2xl">...</span>
+        <span className="animate-pulse text-2xl mt-2">⏳</span>
       ) : (
-        <span className="text-2xl">✔️</span>
+        <span className="text-2xl mt-2">✔️</span>
       )}
     </div>
   );

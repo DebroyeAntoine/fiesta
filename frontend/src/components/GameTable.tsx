@@ -114,14 +114,15 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   }
 
   return (
-    <div className="game-table relative w-full h-screen flex justify-center items-center">
-      <div className="player-circle grid grid-cols-1 gap-4 w-full"> {/* Affichez 1 joueur par ligne */}
+    <div className="game-table relative w-full h-screen flex flex-col justify-center items-center">
+      {/* Section des avatars des joueurs */}
+      <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-8">
         {Array.isArray(players) && players.length > 0 ? (
           players.map((player) => (
             <div key={player.id} className="player-container flex flex-col items-center">
-              {/* Si c'est le joueur courant, affiche sa SkullCard */}
               {player.id === playerId ? (
-                <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
+                // On ne montre pas l'avatar du joueur courant ici, car la SkullCard sera affichée
+                <></>
               ) : (
                 <PlayerAvatar
                   player={{ id: player.id, username: player.username }}
@@ -134,6 +135,12 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
           <p>No players available</p> // Fallback si aucun joueur n'est disponible
         )}
       </div>
+      {/* Section de la SkullCard du joueur courant */}
+      {players.some(player => player.id === playerId) && (
+        <div className="skull-card mt-8">
+          <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
+        </div>
+      )}
     </div>
   );
 };
