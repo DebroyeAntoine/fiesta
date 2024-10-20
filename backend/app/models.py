@@ -28,7 +28,7 @@ class PlayerRound(db.Model):
     initial_word = db.Column(db.String(100), nullable=False)  # Mot initial assigné au début de la partie
 
     def __repr__(self):
-        return f"<PlayerRound Player {self.player_id}, Round {self.round_id}, Word: {self.word_submitted}>"
+        return f"<PlayerRound Player {self.player_id}, Round {self.round_id}, InitialWord {self.initial_word},  Word: {self.word_submitted}>"
 
 # Le modèle Round doit être mis à jour pour ajouter une relation vers PlayerRound
 class Round(db.Model):

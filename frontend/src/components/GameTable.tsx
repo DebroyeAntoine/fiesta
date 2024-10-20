@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PlayerAvatar from './PlayerAvatar';
 import SkullCard from './SkullCard';
+import InitialWord from './InitialWord';
 import { io } from 'socket.io-client';
 
 interface GameTableProps {
@@ -115,6 +116,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
 
   return (
     <div className="game-table relative w-full h-screen flex flex-col justify-center items-center">
+      <InitialWord gameId={gameId} />
       {/* Section des avatars des joueurs */}
       <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-8">
         {Array.isArray(players) && players.length > 0 ? (

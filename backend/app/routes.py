@@ -68,10 +68,8 @@ def tmp_create_game_and_player(user):
         db.session.add(game)
         db.session.commit()
 
-        # Créer les 4 rounds pour cette partie (ou le nombre souhaité)
-        for round_number in range(1, 5):  # Par exemple, 4 rounds
-            new_round = Round(game_id=game.id, number=round_number)
-            db.session.add(new_round)
+        new_round = Round(game_id=game.id, number=1)
+        db.session.add(new_round)
         db.session.commit()
 
     # Ajouter le joueur à cette partie s'il n'est pas déjà dans la game
@@ -177,6 +175,22 @@ def get_players(game_id):
     print("coucou")
     players = Player.query.filter_by(game_id=game_id).all()
     return jsonify({"players": [{"id": player.id, "username": player.username} for player in players]})
+
+@game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
+@jwt_required()
+def get_current_round(game_id):
+    current_player_id = get_jwt_identity()
+
+    round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
+    if not round:
+        return jsonify({"error": "No rounds found"}), 404
+
+    player_round = PlayerRound.query.filter_by(round_id=round.id, player_id=current_player_id).first()
+
+    if not player_round:
+        return jsonify({"error": "No player round found for the current player"}), 404
+
+    return jsonify({"initial_word": player_round.initial_word})
 
 @game_bp.route('/round/<int:round_id>/check_completion', methods=['GET'])
 @jwt_required()
