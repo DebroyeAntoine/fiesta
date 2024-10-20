@@ -43,5 +43,10 @@
   "proxy": "http://localhost:5000",
   "devDependencies": {
     "tailwindcss": "^3.4.14"
+  },
+  "resolutions": {
+    "nth-check": "^2.0.1",
+    "postcss": "^8.4.31"
   }
 }
+
