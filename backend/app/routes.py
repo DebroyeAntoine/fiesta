@@ -88,6 +88,7 @@ def tmp_create_game_and_player(user):
         player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
         db.session.add(player_round)
         db.session.commit()
+    return player
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -98,8 +99,8 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
-        tmp_create_game_and_player(user)
-        return jsonify({"message": "Login successful!", 'token': access_token, 'gameId': "1", "roundId":"1", "playerId": str(user.id)}), 200
+        player = tmp_create_game_and_player(user)
+        return jsonify({"message": "Login successful!", 'token': access_token, 'gameId': "1", "roundId":"1", "playerId": str(player.id)}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
 

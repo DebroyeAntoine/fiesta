@@ -2,7 +2,7 @@ import React from 'react';
 
 interface PlayerAvatarProps {
   player: {
-    id: string;
+    id: number;
     username: string;
   };
   hasSubmitted: boolean;

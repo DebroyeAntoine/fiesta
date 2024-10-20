@@ -4,19 +4,19 @@ import SkullCard from './SkullCard';
 
 interface GameTableProps {
   gameId: string;
-  playerId: string;
+  playerId: number;
   roundId: string;
 }
 
 interface Player {
-  id: string;  // Assumons que l'ID soit de type string
+  id: number;  // Assumons que l'ID soit de type string
   username: string;
 }
 
 const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   const [word, setWord] = useState('');  // Le mot ou l'indice affiché sur la carte tête de mort
   const [players, setPlayers] = useState<Player[]>([]);
-  const [submittedPlayers, setSubmittedPlayers] = useState<string[]>([]);  // IDs des joueurs ayant soumis leur mot
+  const [submittedPlayers, setSubmittedPlayers] = useState<number[]>([]);  // IDs des joueurs ayant soumis leur mot
   const [loading, setLoading] = useState(true); // État de chargement
 
   const handleValidate = async () => {
@@ -56,7 +56,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
 
         if (response.ok) {
           const data = await response.json();
-          setPlayers(data);
+          setPlayers(data.players);
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des joueurs:', error);
@@ -100,24 +100,33 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   if (loading) {
     return <div>Chargement des joueurs...</div>; // Vous pouvez remplacer ceci par un spinner ou un autre composant de chargement
   }
+  console.log(typeof(playerId));
   return (
     <div className="game-table relative w-full h-screen flex justify-center items-center">
-      <div className="center-skull-card absolute bottom-10">
-        <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
-      </div>
-
-      <div className="player-circle grid grid-cols-4 gap-4">
-        {Array.isArray(players) && players.map((player) => (
-           <PlayerAvatar
-             key={player.id}
-             player={{ id: player.id, username: player.username }}
-            hasSubmitted={submittedPlayers.includes(player.id)}  // Check si le joueur a soumis son mot
-           />
-        ))}
+      <div className="player-circle grid grid-cols-1 gap-4 w-full"> {/* Affichez 1 joueur par ligne */}
+        {Array.isArray(players) && players.length > 0 ? (
+          players.map((player) => {
+            console.log(typeof(player.id))
+            return (
+              <div key={player.id} className="player-container flex flex-col items-center">
+                {/* Si c'est le joueur courant, affiche sa SkullCard */}
+                {player.id === playerId ? (
+                  <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
+                ) : (
+                  <PlayerAvatar
+                    player={{ id: player.id, username: player.username }}
+                    hasSubmitted={submittedPlayers.includes(player.id)}
+                  />
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <p>No players available</p>  // Fallback si aucun joueur n'est disponible
+        )}
       </div>
     </div>
   );
 };
-
 export default GameTable;
 
