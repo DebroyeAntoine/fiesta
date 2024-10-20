@@ -172,7 +172,7 @@ def broadcast_player_list(game_id):
         print(e)
 
 @game_bp.route('/game/<int:game_id>/players', methods=['GET'])
-#@jwt_required
+@jwt_required()
 def get_players(game_id):
     print("coucou")
     players = Player.query.filter_by(game_id=game_id).all()
