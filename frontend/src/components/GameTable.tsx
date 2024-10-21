@@ -25,7 +25,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
     try {
       const token = localStorage.getItem('token');  // Assure-toi que tu récupères correctement le token
       /* TODO change with backend logical */
-  
+
       const response = await fetch(`/round/${roundId}/player/${playerId}/submit_word`, {
         method: 'POST',
         headers: {
@@ -34,7 +34,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
         },
         body: JSON.stringify({ word }),
       });
-  
+
       if (response.ok) {
         // Si le mot a bien été soumis, ajoute l'ID du joueur dans la liste
         setSubmittedPlayers(prev => [...prev, playerId]);
@@ -90,7 +90,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         console.log('Passage au round suivant réussi !');
         // Mettre à jour l'état du round si nécessaire
@@ -115,15 +115,16 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   }
 
   return (
-    <div className="game-table relative w-full h-screen flex flex-col justify-center items-center">
+    <div className="game-table relative w-full min-h-screen flex flex-col justify-start items-center"> {/* Ajout de pt-20 pour espacer du haut */}
       <InitialWord gameId={gameId} />
+
       {/* Section des avatars des joueurs */}
-      <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-8">
+      <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-4 mt-4"> {/* Réduction des marges en haut et en bas */}
         {Array.isArray(players) && players.length > 0 ? (
           players.map((player) => (
             <div key={player.id} className="player-container flex flex-col items-center">
               {player.id === playerId ? (
-                // On ne montre pas l'avatar du joueur courant ici, car la SkullCard sera affichée
+                // Ne pas afficher l'avatar du joueur courant ici
                 <></>
               ) : (
                 <PlayerAvatar
@@ -137,9 +138,10 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
           <p>No players available</p> // Fallback si aucun joueur n'est disponible
         )}
       </div>
+
       {/* Section de la SkullCard du joueur courant */}
       {players.some(player => player.id === playerId) && (
-        <div className="skull-card mt-8">
+        <div className="skull-card mt-6"> {/* Réduction de la marge supérieure */}
           <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
         </div>
       )}
