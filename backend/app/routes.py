@@ -180,7 +180,7 @@ def emit_new_round_event(round_id, game_id):
 
     # Remplir new_words avec une logique de rotation
     for index, player in enumerate(players):
-        submitted_word = submitted_words[index % len(submitted_words)].word_submitted
+        submitted_word = submitted_words[(index + 1) % len(submitted_words)].word_submitted
         new_words[player.id] = submitted_word
 
         # Mettre à jour le mot initial pour le joueur dans PlayerRound
@@ -207,7 +207,23 @@ def broadcast_player_list(game_id):
 @jwt_required()
 def get_players(game_id):
     players = Player.query.filter_by(game_id=game_id).all()
-    return jsonify({"players": [{"id": player.id, "username": player.username} for player in players]})
+
+    # Récupération de l'ID du round actuel
+    current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
+
+    # Préparer la liste des joueurs avec l'état de soumission
+    player_data = []
+    for player in players:
+        player_round = PlayerRound.query.filter_by(player_id=player.id, round_id=current_round.id).first()
+        submitted = player_round.word_submitted is not None if player_round else False
+
+        player_data.append({
+            "id": player.id,
+            "username": player.username,
+            "word_submitted": submitted  # Ajoutez l'état de soumission ici
+        })
+
+    return jsonify({"players": player_data})
 
 @game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
 @jwt_required()
