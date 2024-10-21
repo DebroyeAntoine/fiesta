@@ -24,15 +24,18 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   const handleValidate = async () => {
     try {
       const token = localStorage.getItem('token');  // Assure-toi que tu récupères correctement le token
-      /* TODO change with backend logical */
 
-      const response = await fetch(`/round/${roundId}/player/${playerId}/submit_word`, {
+      const response = await fetch(`/game/submit_word`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ word }),
+       body: JSON.stringify({
+                    word: word,
+                    round_id: roundId,
+                    game_id: gameId
+                }),
       });
 
       if (response.ok) {
@@ -55,6 +58,11 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
     });// Écoute les événements lorsque des joueurs quittent
     socket.on('player_left', (playerData: { id: number }) => {
       setPlayers((prevPlayers) => prevPlayers.filter((player) => player.id !== playerData.id));
+    });
+
+    socket.on('word_submitted', (data) => {
+    console.log(`Player ${data.player_id} submitted the word: ${data.word}`);
+    setSubmittedPlayers((prev) => [...prev, data.player_id]);    // Mettez à jour l'interface utilisateur ici
     });
 
     // Récupérer la liste des joueurs à l'initialisation
@@ -80,35 +88,6 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
     };
   }, [gameId]);
 
-  const goToNextRound = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch(`/round/${roundId}/next`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        console.log('Passage au round suivant réussi !');
-        // Mettre à jour l'état du round si nécessaire
-      } else {
-        console.error('Erreur lors du passage au round suivant.');
-      }
-    } catch (error) {
-      console.error('Error advancing to next round:', error);
-    }
-  }, [roundId]);
-
-  useEffect(() => {
-    // Vérifie si tous les joueurs ont validé leur mot
-    if (submittedPlayers.length === players.length && players.length > 0) {
-      console.log('Tous les joueurs ont soumis leur mot ! Passons au round suivant.');
-      goToNextRound(); // Appelle la fonction pour avancer au round suivant
-    }
-  }, [submittedPlayers, players, goToNextRound]); // Le hook se déclenchera à chaque fois que submittedPlayers change
 
   if (loading) {
     return <div>Chargement des joueurs...</div>; // Vous pouvez remplacer ceci par un spinner ou un autre composant de chargement
