@@ -20,6 +20,11 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [submittedPlayers, setSubmittedPlayers] = useState<number[]>([]);  // IDs des joueurs ayant soumis leur mot
   const [loading, setLoading] = useState(true); // État de chargement
+  const [newRound, setNewRound] = useState(false); // Nouvel état pour suivre si un nouveau round a été déclenché
+
+  const handleNewRound = () => {
+      setNewRound(prev => !prev); // Changez l'état pour forcer le composant à se mettre à jour
+    };
 
   const handleValidate = async () => {
     try {
@@ -60,6 +65,11 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
       setPlayers((prevPlayers) => prevPlayers.filter((player) => player.id !== playerData.id));
     });
 
+    socket.on('new_round', async (data) => {
+        console.log(`New round started: ${data.round_id}`);
+        handleNewRound();
+    });
+
     socket.on('word_submitted', (data) => {
     console.log(`Player ${data.player_id} submitted the word: ${data.word}`);
     setSubmittedPlayers((prev) => [...prev, data.player_id]);    // Mettez à jour l'interface utilisateur ici
@@ -95,7 +105,7 @@ const GameTable : React.FC<GameTableProps> = ({gameId, playerId, roundId}) => {
 
   return (
     <div className="game-table relative w-full min-h-screen flex flex-col justify-start items-center"> {/* Ajout de pt-20 pour espacer du haut */}
-      <InitialWord gameId={gameId} />
+      <InitialWord gameId={gameId} refreshKey={newRound} />
 
       {/* Section des avatars des joueurs */}
       <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-4 mt-4"> {/* Réduction des marges en haut et en bas */}

@@ -153,7 +153,12 @@ def submit_word():
         socketio.emit('word_submitted', {'player_id': current_player_id})
 
         # Vérifiez si tous les joueurs ont soumis leur mot
-        all_submitted = PlayerRound.query.filter_by(round_id=round_id).count() == Player.query.count()
+        submitted_count = PlayerRound.query.filter_by(round_id=round_id).filter(PlayerRound.word_submitted.isnot(None)).count()
+
+        # Comptez le nombre total de joueurs dans le jeu
+        total_players_count = Player.query.filter_by(game_id=game_id).count()
+
+        all_submitted = submitted_count == total_players_count  # Vérifiez si tous ont soumis
 
         if all_submitted:
             # Émettre un nouvel événement pour indiquer le changement de round
@@ -163,8 +168,31 @@ def submit_word():
     else:
         return jsonify({"error": "PlayerRound not found!"}), 404
 
-def emit_new_round_event(game_id, round_id):
-    socketio.emit('new_round', {'game_id': game_id, 'round_id': round_id})
+def emit_new_round_event(round_id, game_id):
+    # Récupérer les joueurs du game_id
+    players = Player.query.filter_by(game_id=game_id).all()
+
+    # Créer un dictionnaire pour les nouveaux mots
+    new_words = {}
+
+    # Récupérer les mots soumis
+    submitted_words = PlayerRound.query.filter_by(round_id=round_id).all()
+
+    # Remplir new_words avec une logique de rotation
+    for index, player in enumerate(players):
+        submitted_word = submitted_words[index % len(submitted_words)].word_submitted
+        new_words[player.id] = submitted_word
+
+        # Mettre à jour le mot initial pour le joueur dans PlayerRound
+        player_round = PlayerRound.query.filter_by(player_id=player.id, round_id=round_id).first()
+        if player_round:
+            player_round.initial_word = submitted_word
+
+    # Commit les changements en base de données
+    db.session.commit()
+
+    # Émet l'événement pour indiquer un nouveau round
+    socketio.emit('new_round', {'round_id': round_id})
 
 def broadcast_player_list(game_id):
     players = Player.query.filter_by(game_id=game_id).all()

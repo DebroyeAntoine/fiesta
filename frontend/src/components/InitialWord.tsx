@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 
 interface InitialWordDisplayProps {
   gameId: string;
+  refreshKey: boolean;
 }
 
-const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({ gameId }) => {
+const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({ gameId, refreshKey }) => {
   const [initialWord, setInitialWord] = useState('');
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({ gameId }) => {
     };
 
     fetchInitialWord();
-  }, [gameId]);
+  }, [gameId, refreshKey]);
 
   return (
     <div className="relative mx-auto p-6 mt-6 rounded-lg shadow-lg max-w-md bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 border-4 border-yellow-300 text-white text-center font-bold text-3xl">
