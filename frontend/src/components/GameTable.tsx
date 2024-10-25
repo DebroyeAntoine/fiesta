@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'; // Suppression de 'useCallback' car non utilisé
 import PlayerAvatar from './PlayerAvatar';
-import SkullCard from './SkullCard';
+import SkullCardInput from './SkullCardInput';
 import InitialWord from './InitialWord';
 import { io } from 'socket.io-client';
 
@@ -152,7 +152,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
             {/* Section de la SkullCard du joueur courant */}
             {players.some(player => player.id === playerId) && (
                 <div className="skull-card mt-6">
-                    <SkullCard word={word} setWord={setWord} handleValidate={handleValidate} />
+                    <SkullCardInput word={word} setWord={setWord} handleValidate={handleValidate} />
                 </div>
             )}
         </div>
