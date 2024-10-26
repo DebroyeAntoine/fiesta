@@ -145,25 +145,28 @@ def submit_word():
     else:
         return jsonify({"error": "PlayerRound not found!"}), 404
 
-def emit_new_round_event(round_id, game_id):
+def emit_new_round_event(previous_round_id, game_id):
     players = Player.query.filter_by(game_id=game_id).all()
 
     new_words = {}
 
-    submitted_words = PlayerRound.query.filter_by(round_id=round_id).all()
+    submitted_words = PlayerRound.query.filter_by(round_id=previous_round_id).all()
+
+    new_round = Round(game_id=game_id, number=Round.query.filter_by(game_id=game_id).count() + 1)
+    db.session.add(new_round)
+    db.session.commit()
 
     # fill new words with a rotation of old words
     for index, player in enumerate(players):
         submitted_word = submitted_words[(index + 1) % len(submitted_words)].word_submitted
         new_words[player.id] = submitted_word
 
-        player_round = PlayerRound.query.filter_by(player_id=player.id, round_id=round_id).first()
-        if player_round:
-            player_round.initial_word = submitted_word
+        player_round = PlayerRound(player_id=player.id, round_id=new_round.id, initial_word=submitted_word)
+        db.session.add(player_round)
 
     db.session.commit()
 
-    socketio.emit('new_round', {'round_id': round_id})
+    socketio.emit('new_round', {'round_id': new_round.id})
 
 def broadcast_player_list(game_id):
     players = Player.query.filter_by(game_id=game_id).all()
