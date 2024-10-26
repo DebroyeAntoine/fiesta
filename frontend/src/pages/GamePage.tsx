@@ -3,24 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import GameTable from '../components/GameTable';
 
 const GamePage: React.FC = () => {
-  // Récupère les paramètres de l'URL
   const { gameId, playerId, roundId } = useParams<{ gameId: string, playerId: string, roundId: string }>();
   const navigate = useNavigate();
   const playerIdNumber = Number(playerId);
 
-  // Vérification des paramètres et redirection si invalides
   useEffect(() => {
     if (!gameId || isNaN(playerIdNumber) || !roundId) {
       console.error("Invalid parameters, redirecting to home");
-      navigate("/"); // Rediriger vers la page d'accueil si les paramètres sont manquants ou invalides
+      navigate("/");
     } else {
       console.log("gameId:", gameId, "playerId:", playerIdNumber, "roundId:", roundId);
     }
-  }, [gameId, playerIdNumber, roundId, navigate]); // Ajout de playerIdNumber dans les dépendances
+  }, [gameId, playerIdNumber, roundId, navigate]);
 
-  // Vérification supplémentaire avant de rendre le composant
   if (!gameId || !playerId || !roundId || isNaN(playerIdNumber)) {
-    return null; // Si les paramètres sont invalides, on retourne null (ou tu pourrais rediriger vers une erreur)
+    return null;
   }
 
   return (

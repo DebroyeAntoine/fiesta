@@ -1,14 +1,13 @@
 import React from 'react';
 import SkullWordCard from '../components/SkullWordCard';
 
-// Mock data (à remplacer par des données réelles)
-const skullWords = ['Fantôme', 'Pirate', 'Vampire', 'Maths']; // Derniers mots soumis
-const characters = ['Casper', 'Jack Sparrow', 'Dracula', 'Pythagore', 'Piège 1', 'Piège 2']; // Personnages + pièges
+// TODO replace these by backend data
+const skullWords = ['Fantôme', 'Pirate', 'Vampire', 'Maths'];
+const characters = ['Casper', 'Jack Sparrow', 'Dracula', 'Pythagore', 'Piège 1', 'Piège 2'];
 
 const GameOverPage: React.FC = () => {
   const handleSubmit = (skullIndex: number, selectedCharacter: string) => {
     console.log(`Le mot "${skullWords[skullIndex]}" a été associé à "${selectedCharacter}"`);
-    // Ici, tu peux envoyer les choix au backend via WebSocket ou API
   };
 
   return (

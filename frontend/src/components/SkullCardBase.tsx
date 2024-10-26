@@ -3,7 +3,6 @@ import React from 'react';
 
 interface SkullCardProps {
   children: React.ReactNode;
-  // Props supplémentaires pour styliser ou adapter les bordures et tailles
 }
 
 const SkullCardHeader: React.FC<SkullCardProps> = ({ children }) => (

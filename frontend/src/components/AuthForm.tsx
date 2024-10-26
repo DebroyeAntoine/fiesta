@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 interface AuthFormProps {
     onSubmit: (username: string, password: string) => Promise<void>;
-    onDeleteUsers?: () => Promise<void>;  // Prop facultative pour supprimer les utilisateurs
+    onDeleteUsers?: () => Promise<void>;
     isRegister: boolean;
 }
 

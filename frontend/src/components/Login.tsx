@@ -17,7 +17,6 @@ const Login: React.FC = () => {
         if (!response.ok) {
             throw new Error('Failed to login');
         } else {
-        // Stocker le token JWT
             localStorage.setItem('token', data.token);
             navigate(`/game/${data.gameId}/player/${data.playerId}/round/1`);
         }

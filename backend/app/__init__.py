@@ -25,7 +25,7 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # Initialize SocketIO here
+    # Initialize SocketIO
     socketio.init_app(app)
 
     return app

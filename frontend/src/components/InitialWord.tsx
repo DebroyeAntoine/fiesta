@@ -15,7 +15,7 @@ const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({ gameId, refresh
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // Si tu utilises JWT
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
@@ -48,7 +48,7 @@ const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({ gameId, refresh
             className="confetti absolute w-2 h-2 opacity-75 animate-confetti-fall"
             style={{
               left: `${Math.random() * 100}%`,
-              top: `-${Math.random() * 100}px`, // Start the confetti off-screen
+              top: `-${Math.random() * 100}px`,
               backgroundColor: index % 2 === 0 ? 'rgba(255, 165, 0, 0.9)' : 'rgba(255, 69, 0, 0.9)',
               animationDelay: `${Math.random() * 3}s`,
               animationDuration: `${2 + Math.random() * 3}s`,
