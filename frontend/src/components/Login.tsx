@@ -18,7 +18,7 @@ const Login: React.FC = () => {
             throw new Error('Failed to login');
         } else {
             localStorage.setItem('token', data.token);
-            navigate(`/game/${data.gameId}/player/${data.playerId}/round/1`);
+            navigate(`/game/${data.gameId}`);
         }
     };
 

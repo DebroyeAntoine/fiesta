@@ -6,8 +6,6 @@ import { io } from 'socket.io-client';
 
 interface GameTableProps {
     gameId: string;
-    playerId: number;
-    roundId: string;
 }
 
 interface Player {
@@ -16,20 +14,24 @@ interface Player {
     word_submitted?: boolean;
 }
 
-const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
+const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
+    const [playerId, setPlayerId] = useState<number>(0)
     const [word, setWord] = useState('');
     const [players, setPlayers] = useState<Player[]>([]);
     const [submittedPlayers, setSubmittedPlayers] = useState<number[]>([]);
     const [loading, setLoading] = useState(true);
     const [newRound, setNewRound] = useState(false);
+    const [roundId, setRoundId] = useState<number>(0);
 
-    const handleNewRound = () => {
+    const handleNewRound = (round_id: number) => {
+        setRoundId(round_id);
         setNewRound(prev => !prev);
-        setWord(prev => '');
-        setSubmittedPlayers(prev => [])
+        setWord('');
+        setSubmittedPlayers([]);
     };
 
     const handleValidate = async () => {
+        if (playerId === null) return;
         try {
             const token = localStorage.getItem('token');
 
@@ -42,12 +44,12 @@ const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
                 body: JSON.stringify({
                     word: word,
                     round_id: roundId,
-                    game_id: gameId
+                    game_id: gameId,
                 }),
             });
 
             if (response.ok) {
-                setSubmittedPlayers(prev => [...prev, playerId]);
+                setSubmittedPlayers(prev => [...prev, playerId as number]);
             }
         } catch (error) {
             console.error('Error submitting word:', error);
@@ -55,45 +57,36 @@ const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
     };
 
     useEffect(() => {
-        const socket = io('http://localhost:5000', {
-            transports: ['websocket'],
-        });
-
-        socket.on('update_player_list', (data) => {
-            setPlayers(data.players);
-
-            const submittedIds = data.players
-                .filter((player: Player) => player.word_submitted) // FIlter on player who has submitted
-                .map((player: Player) => player.id);
-
-            setSubmittedPlayers(submittedIds);
-        });
-
-        socket.on('player_left', (playerData: { id: number }) => {
-            setPlayers((prevPlayers) => prevPlayers.filter((player) => player.id !== playerData.id));
-        });
-
-        socket.on('new_round', (data) => {
-            console.log(`New round started: ${data.round_id}`);
-            handleNewRound();
-        });
-
-        socket.on('word_submitted', (data) => {
-            console.log(`Player ${data.player_id} submitted the word: ${data.word}`);
-            setSubmittedPlayers((prev) => [...prev, data.player_id]);
-        });
-
-        const fetchPlayers = async () => {
+        const fetchGameInfo = async () => {
             const token = localStorage.getItem('token');
-            const response = await fetch(`/game/${gameId}/players`, {
+            const response = await fetch(`/game/${gameId}/get_game_infos`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
             });
-// TODO remove this ?
-            const data = await response.json();
+
+            if (response.ok) {
+                const data = await response.json();
+                setPlayers(data.players);
+                setRoundId(data.round_id);
+                setPlayerId(data.player_id);
+                setLoading(false);
+            } else {
+                console.error('Failed to fetch game info');
+                setLoading(false);
+            }
+        };
+
+        fetchGameInfo();
+
+        // Clean-up socket listeners
+        const socket = io('http://localhost:5000', {
+            transports: ['websocket'],
+        });
+
+    socket.on('update_player_list', (data) => {
             setPlayers(data.players);
 
             const submittedIds = data.players
@@ -101,18 +94,28 @@ const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
                 .map((player: Player) => player.id);
 
             setSubmittedPlayers(submittedIds);
-            setLoading(false);
-        };
+        });
 
-        fetchPlayers();
+        socket.on('player_left', (playerData: { id: number }) => {
+            setPlayers(prevPlayers => prevPlayers.filter(player => player.id !== playerData.id));
+        });
+
+        socket.on('new_round', (data : { round_id: number}) => {
+            console.log(`New round started: ${data.round_id}`);
+            handleNewRound(Number(data.round_id));
+        });
+
+        socket.on('word_submitted', (data) => {
+            console.log(`Player ${data.player_id} submitted the word: ${data.word}`);
+            setSubmittedPlayers(prev => [...prev, data.player_id]);
+        });
 
         return () => {
-            socket.off('player_update');
+            socket.off('update_player_list');
             socket.off('player_left');
             socket.off('word_submitted');
             socket.off('new_round');
-        };
-    }, [gameId]);
+        };}, [gameId]);
 
     if (loading) {
         return <div>Chargement des joueurs...</div>;
@@ -137,7 +140,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId, playerId, roundId }) => {
                         </div>
                     ))
                 ) : (
-                    <p>No players available</p> // Fallback si aucun joueur n'est disponible
+                    <p>No players available</p>
                 )}
             </div>
             {/* Section de la SkullCard du joueur courant */}

@@ -197,6 +197,27 @@ def get_players(game_id):
 
     return jsonify({"players": player_data})
 
+
+@game_bp.route('/game/<int:game_id>/get_game_infos', methods=['GET'])
+@jwt_required()
+def get_info(game_id):
+    players = Player.query.filter_by(game_id=game_id).all()
+    current_player_id = get_jwt_identity()
+    current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
+
+    player_data = []
+    for player in players:
+        player_round = PlayerRound.query.filter_by(player_id=player.id, round_id=current_round.id).first()
+        submitted = player_round.word_submitted is not None if player_round else False
+
+        player_data.append({
+            "id": player.id,
+            "username": player.username,
+            "word_submitted": submitted
+        })
+
+    return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player_id})
+
 @game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
 @jwt_required()
 def get_current_round(game_id):

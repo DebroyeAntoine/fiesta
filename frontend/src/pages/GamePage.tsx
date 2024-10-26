@@ -3,20 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import GameTable from '../components/GameTable';
 
 const GamePage: React.FC = () => {
-  const { gameId, playerId, roundId } = useParams<{ gameId: string, playerId: string, roundId: string }>();
+  const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
-  const playerIdNumber = Number(playerId);
 
   useEffect(() => {
-    if (!gameId || isNaN(playerIdNumber) || !roundId) {
+    if (!gameId ) {
       console.error("Invalid parameters, redirecting to home");
       navigate("/");
     } else {
-      console.log("gameId:", gameId, "playerId:", playerIdNumber, "roundId:", roundId);
+      console.log("gameId:", gameId);
     }
-  }, [gameId, playerIdNumber, roundId, navigate]);
+  }, [gameId, navigate]);
 
-  if (!gameId || !playerId || !roundId || isNaN(playerIdNumber)) {
+  if (!gameId) {
     return null;
   }
 
@@ -28,7 +27,7 @@ const GamePage: React.FC = () => {
       </h1>
 
       {/* Passe les props à GameTable */}
-      <GameTable gameId={gameId} playerId={playerIdNumber} roundId={roundId} />
+      <GameTable gameId={gameId} />
     </div>
   );
 };
