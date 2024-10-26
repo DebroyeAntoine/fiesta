@@ -139,7 +139,10 @@ def submit_word():
         all_submitted = submitted_count == total_players_count
 
         if all_submitted:
-            emit_new_round_event(game_id, round_id)
+            if round_id == 4:
+                emit_game_over(game_id)
+            else:
+                emit_new_round_event(game_id, round_id)
 
         return jsonify({"message": "Word submitted successfully!"}), 200
     else:
@@ -167,6 +170,19 @@ def emit_new_round_event(previous_round_id, game_id):
     db.session.commit()
 
     socketio.emit('new_round', {'round_id': new_round.id})
+
+def emit_game_over(game_id):
+    initial_words = PlayerRound.query.filter_by(round_id=1).all()
+    submitted_words = PlayerRound.query.filter_by(round_id=4).all()
+    words_to_sent = initial_words[:]
+
+    while len(words_to_sent) < 8:
+        random_word = random.choice(characters)
+        if random_word not in words_to_sent:
+            words_to_sent.append(random_word)
+
+    random.shuffle(words_to_sent)
+    socketio.emit('game_over', {'initial_words': words_to_sent, 'end_words': submitted_words})
 
 def broadcast_player_list(game_id):
     players = Player.query.filter_by(game_id=game_id).all()
