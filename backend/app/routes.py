@@ -142,7 +142,7 @@ def submit_word():
             if round_id == 4:
                 emit_game_over(game_id)
             else:
-                emit_new_round_event(game_id, round_id)
+                emit_new_round_event(round_id, game_id)
 
         return jsonify({"message": "Word submitted successfully!"}), 200
     else:
