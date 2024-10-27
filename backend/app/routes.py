@@ -172,8 +172,8 @@ def emit_new_round_event(previous_round_id, game_id):
     socketio.emit('new_round', {'round_id': new_round.id})
 
 def emit_game_over(game_id):
-    initial_words = PlayerRound.query.filter_by(round_id=1).all()
-    submitted_words = PlayerRound.query.filter_by(round_id=4).all()
+    initial_words = [player_round.initial_word for player_round in PlayerRound.query.filter_by(round_id=1).all()]
+    submitted_words = [player_round.word_submitted for player_round in PlayerRound.query.filter_by(round_id=4).all()]
     words_to_sent = initial_words[:]
 
     while len(words_to_sent) < 8:
