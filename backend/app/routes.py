@@ -1,10 +1,12 @@
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game
+from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation
 from app.utils.character_loader import load_characters_from_file
 from app.socket import socketio
 from flask_socketio import emit, join_room, leave_room
 import random
+from sqlalchemy.sql import func
+from sqlalchemy.types import  Integer
 
 CHARACTERS_FILE_PATH = 'app/utils/characters.txt'
 characters = load_characters_from_file(CHARACTERS_FILE_PATH)
@@ -271,4 +273,52 @@ def advance_round(game_id):
     return jsonify({"message": f"Advanced to Round {game.current_round}"}), 200
 
 
+@socketio.on('submit_associations')
+def handle_submit_associations(data):
+    game_id = data['game_id']
+    player_id = data['player_id']
+    associations = data['associations']
 
+    for association in associations:
+        skull_word = association['skull_word']
+        selected_character = association['selected_character']
+
+        is_correct = check_association_correctness(skull_word, selected_character)
+
+        new_association = PlayerAssociation(
+            game_id=game_id,
+            player_id=player_id,
+            skull_word=skull_word,
+            selected_character=selected_character,
+            is_correct=is_correct
+        )
+        db.session.add(new_association)
+
+    db.session.commit()
+
+    all_submitted = check_all_players_submitted(game_id)
+
+    if all_submitted:
+        calculate_scores_and_notify(game_id)
+
+def check_association_correctness(skull_word, selected_character):
+    #TODO
+    return True
+
+def check_all_players_submitted(game_id):
+    game = Game.query.get(game_id)
+    total_players = len(game.players)
+
+    submitted_players_count = db.session.query(PlayerAssociation.player_id).filter_by(game_id=game_id).distinct().count()
+
+    return total_players == submitted_players_count
+
+def calculate_scores_and_notify(game_id):
+    player_scores = db.session.query(
+        PlayerAssociation.player_id,
+        func.sum(PlayerAssociation.is_correct.cast(Integer)).label("score")
+    ).filter_by(game_id=game_id).group_by(PlayerAssociation.player_id).all()
+
+    scores_dict = {player_id: score or 0 for player_id, score in player_scores}
+
+    emit('game_over_scores', {'scores': scores_dict}, room=f'game_{game_id}')

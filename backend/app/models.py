@@ -49,10 +49,21 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
-    
+
     @property
     def username(self):
-        return User.query.get(self.user_id).username    
+        return User.query.get(self.user_id).username
     player_rounds = db.relationship('PlayerRound', backref='player', lazy=True)
     def __repr__(self):
         return f'<Player {self.user.username} playing as {self.character}>'
+
+
+# This class will store the game results
+class PlayerAssociation(db.Model):
+    __tablename__ = 'player_associations'
+
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), primary_key=True)
+    skull_word = db.Column(db.String, primary_key=True)
+    selected_character = db.Column(db.String, nullable=False)
+    is_correct = db.Column(db.Boolean, default=False)
