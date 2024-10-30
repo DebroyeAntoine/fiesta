@@ -6,7 +6,7 @@ import { useSocket } from '../context/SocketContext';
 const GameOverPage: React.FC = () => {
   const location = useLocation();
   const socket = useSocket();
-  const { characters = [], skullWords = [] }: { characters: string[]; skullWords: string[] } = location.state || {};
+  const { characters = [], skullWords = [], game_id = 0 }: { characters: string[]; skullWords: string[]; game_id: number } = location.state || {};
   const [selectedCharacters, setSelectedCharacters] = useState<Array<string | null>>(Array(skullWords.length).fill(null));
   const [waiting, setWaiting] = useState(false);
   const [scores, setScores] = useState<{ [playerId: number]: number } | null>(null);
@@ -17,17 +17,36 @@ const GameOverPage: React.FC = () => {
     setSelectedCharacters(newSelections);
   };
 
-  const handleFinalSubmit = () => {
-    if (socket) {
-      socket.emit('submit_associations', {
-        game_id: location.state.gameId,
-        player_id: location.state.playerId,
-        associations: skullWords.map((word, index) => ({
-          skull_word: word,
-          selected_character: selectedCharacters[index],
-        })),
+  const handleFinalSubmit = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error("No JWT token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/game/${game_id}/submit_associations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          associations: skullWords.map((word, index) => ({
+            skull_word: word,
+            selected_character: selectedCharacters[index],
+          })),
+        }),
       });
-      setWaiting(true); // Afficher l'écran d'attente après envoi
+
+      if (response.ok) {
+        setWaiting(true); // Show waiting screen when validate
+      } else {
+        console.error("Error submitting associations");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
     }
   };
 

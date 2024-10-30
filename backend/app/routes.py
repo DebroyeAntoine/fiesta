@@ -273,17 +273,18 @@ def advance_round(game_id):
     return jsonify({"message": f"Advanced to Round {game.current_round}"}), 200
 
 
-@socketio.on('submit_associations')
-def handle_submit_associations(data):
-    game_id = data['game_id']
-    player_id = data['player_id']
+@game_bp.route('/game/<int:game_id>/submit_associations', methods=['POST'])
+@jwt_required()
+def handle_submit_associations(game_id):
+    player_id = get_jwt_identity()
+    data = request.get_json()
     associations = data['associations']
 
     for association in associations:
         skull_word = association['skull_word']
         selected_character = association['selected_character']
 
-        is_correct = check_association_correctness(skull_word, selected_character)
+        is_correct = skull_word == selected_character
 
         new_association = PlayerAssociation(
             game_id=game_id,
@@ -301,9 +302,8 @@ def handle_submit_associations(data):
     if all_submitted:
         calculate_scores_and_notify(game_id)
 
-def check_association_correctness(skull_word, selected_character):
-    #TODO
-    return True
+    return {"message": "Associations submitted successfully"}, 200
+
 
 def check_all_players_submitted(game_id):
     game = Game.query.get(game_id)
@@ -321,4 +321,4 @@ def calculate_scores_and_notify(game_id):
 
     scores_dict = {player_id: score or 0 for player_id, score in player_scores}
 
-    emit('game_over_scores', {'scores': scores_dict}, room=f'game_{game_id}')
+    emit('game_over_scores', {'scores': scores_dict})

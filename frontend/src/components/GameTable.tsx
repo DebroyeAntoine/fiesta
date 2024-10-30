@@ -111,7 +111,8 @@ const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
 
         socket.on('game_over', (data:  { initial_words: string[]; end_words: string[] }) => {
             console.log(`datas: ${data.initial_words}`);
-            navigate(`/gameOver/${gameId}`, { state: { skullWords: data.end_words, characters: data.initial_words } });
+            navigate(`/gameOver/${gameId}`, { state:
+                { skullWords: data.end_words, characters: data.initial_words, game_id: gameId } });
         });
 
         return () => {
