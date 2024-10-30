@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PlayerAvatar from './PlayerAvatar';
 import SkullCardInput from './SkullCardInput';
 import InitialWord from './InitialWord';
-import { io } from 'socket.io-client';
+import { useSocket } from '../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
 
 interface GameTableProps {
@@ -24,6 +24,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
     const [newRound, setNewRound] = useState(false);
     const [roundId, setRoundId] = useState<number>(0);
     const navigate = useNavigate()
+    const socket = useSocket();
 
     const handleNewRound = (round_id: number) => {
         setRoundId(round_id);
@@ -84,10 +85,6 @@ const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
         fetchGameInfo();
 
         // Clean-up socket listeners
-        const socket = io('http://localhost:5000', {
-            transports: ['websocket'],
-        });
-
     socket.on('update_player_list', (data) => {
             setPlayers(data.players);
 
@@ -123,7 +120,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
             socket.off('word_submitted');
             socket.off('new_round');
             socket.off('game_over');
-        };}, [gameId, navigate]);
+        };}, [gameId, navigate, socket]);
 
     if (loading) {
         return <div>Chargement des joueurs...</div>;
