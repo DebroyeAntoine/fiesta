@@ -51,6 +51,39 @@ def delete_all():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@game_bp.route('/game/create', methods=['POST'])
+@jwt_required()
+def create_game():
+    player_id = get_jwt_identity()
+
+    new_game = Game(owner_id=player_id, status='waiting')
+    db.session.add(new_game)
+    db.session.commit()
+
+    player = Player(user_id=player_id, game_id=new_game.id)
+    db.session.add(player)
+    db.session.commit()
+
+    join_room(f"game_{new_game.id}")
+
+    return jsonify({"game_id": new_game.id, "message": "Game created successfully!"}), 201
+
+@game_bp.route('/game/<int:game_id>/join', methods=['POST'])
+@jwt_required()
+def join_game(game_id):
+    player_id = get_jwt_identity()
+
+    game = Game.query.filter_by(id=game_id, status='waiting').first()
+    if not game:
+        return jsonify({"error": "Game not available or already in progress"}), 404
+
+    player = Player(user_id=player_id, game_id=game_id)
+    db.session.add(player)
+    db.session.commit()
+
+    join_room(f"game_{game.id}")
+    return jsonify({"message": "Successfully joined game", "game_id": game_id}), 200
+
 def tmp_create_game_and_player(user):
     game = Game.query.filter_by(id=1).first()
 

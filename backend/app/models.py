@@ -43,6 +43,9 @@ class Game(db.Model):
     players = db.relationship('Player', backref='game', lazy=True)
     rounds = db.relationship('Round', backref='game', lazy=True)
     current_round = db.Column(db.Integer, default=1)
+    owner_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
+    constraint = db.Column(db.String, nullable=True)
+    status = db.Column(db.String(20), default='waiting')  # valeurs possibles: waiting, in_progress, ended
 
 
 class Player(db.Model):
