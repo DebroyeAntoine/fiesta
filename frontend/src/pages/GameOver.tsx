@@ -9,7 +9,7 @@ const GameOverPage: React.FC = () => {
   const { characters = [], skullWords = [], game_id = 0 }: { characters: string[]; skullWords: string[]; game_id: number } = location.state || {};
   const [selectedCharacters, setSelectedCharacters] = useState<Array<string | null>>(Array(skullWords.length).fill(null));
   const [waiting, setWaiting] = useState(false);
-  const [scores, setScores] = useState<{ [playerId: number]: number } | null>(null);
+  const [score, setScore] = useState();
 
   const handleCharacterSelect = (index: number, character: string) => {
     const newSelections = [...selectedCharacters];
@@ -52,13 +52,14 @@ const GameOverPage: React.FC = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on('game_over_scores', (data) => {
-        setScores(data.scores);
+      socket.on('game_result', (data) => {
+        console.log("coucou");
+        setScore(data.score);
         setWaiting(false);
       });
 
       return () => {
-        socket.off('game_over_scores');
+        socket.off('game_result');
       };
     }
   }, [socket]);
@@ -78,14 +79,10 @@ const GameOverPage: React.FC = () => {
         </div>
       )}
 
-      {scores ? (
-        <div className="scores-section text-center">
-          <h2 className="text-3xl mb-6">Scores finaux</h2>
-          <ul>
-            {Object.entries(scores).map(([playerId, score]) => (
-              <li key={playerId}>Joueur {playerId} : {score} points</li>
-            ))}
-          </ul>
+      {score != null ? (
+        <div className="score-section text-center text-black">
+          <h2 className="text-3xl mb-6">Votre Score Final :</h2>
+          <p className="text-2xl">{score} points</p> {/* Affichez le score ici */}
         </div>
       ) : (
         <>

@@ -1,12 +1,13 @@
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation
+from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation, WordEvolution
 from app.utils.character_loader import load_characters_from_file
 from app.socket import socketio
 from flask_socketio import emit, join_room, leave_room
 import random
 from sqlalchemy.sql import func
 from sqlalchemy.types import  Integer
+from sqlalchemy.orm import  aliased
 
 CHARACTERS_FILE_PATH = 'app/utils/characters.txt'
 characters = load_characters_from_file(CHARACTERS_FILE_PATH)
@@ -76,7 +77,9 @@ def tmp_create_game_and_player(user):
 
         first_round = Round.query.filter_by(game_id=game.id, number=1).first()
         player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
+        word_evolution = WordEvolution(game_id=game.id, player_id=player.id, round_id=first_round.id, word=initial_word, character=initial_word)
         db.session.add(player_round)
+        db.session.add(word_evolution)
         db.session.commit()
     broadcast_player_list(game.id)
     return player
@@ -130,6 +133,17 @@ def submit_word():
 
     if player_round:
         player_round.word_submitted = word
+        word_evolution = WordEvolution.query.filter_by(
+            game_id=game_id,
+            player_id=current_player_id,
+            round_id=round_id
+        ).first()
+
+        if word_evolution:
+            word_evolution.word = word
+        else:
+            word_evolution = WordEvolution(game_id=game_id, player_id=current_player_id, round_id=round_id, word=word)
+            db.session.add(word_evolution)
         db.session.commit()
 
         socketio.emit('word_submitted', {'player_id': current_player_id})
@@ -284,7 +298,26 @@ def handle_submit_associations(game_id):
         skull_word = association['skull_word']
         selected_character = association['selected_character']
 
-        is_correct = skull_word == selected_character
+        word_round_4 = aliased(WordEvolution)
+        word_round_1 = aliased(WordEvolution)
+
+        # Find the initial character for the skull card
+        initial_evolution = db.session.query(word_round_1.character).select_from(word_round_1).join(
+            word_round_4,
+            (word_round_4.word == skull_word) &
+            (word_round_4.round_id == 4) &
+            (word_round_4.game_id == game_id) &
+            (word_round_4.player_id == word_round_1.player_id)
+        ).filter(
+            word_round_1.round_id == 1,
+            word_round_1.game_id == game_id
+        ).first()
+        if initial_evolution is None:
+            print(f"Erreur : Aucun mot initial trouvé pour le skull_word {skull_word} du joueur {player_id}")
+            continue
+
+        initial_character = initial_evolution[0]
+        is_correct = initial_character == selected_character
 
         new_association = PlayerAssociation(
             game_id=game_id,
@@ -296,14 +329,12 @@ def handle_submit_associations(game_id):
         db.session.add(new_association)
 
     db.session.commit()
-
     all_submitted = check_all_players_submitted(game_id)
 
     if all_submitted:
         calculate_scores_and_notify(game_id)
 
-    return {"message": "Associations submitted successfully"}, 200
-
+    return jsonify({"message": "Associations submitted successfully"}), 200
 
 def check_all_players_submitted(game_id):
     game = Game.query.get(game_id)
@@ -314,11 +345,17 @@ def check_all_players_submitted(game_id):
     return total_players == submitted_players_count
 
 def calculate_scores_and_notify(game_id):
+    game = Game.query.get(game_id)
+    total_players = len(game.players)
+
+    score_to_do = (total_players - 1) * total_players
+
     player_scores = db.session.query(
         PlayerAssociation.player_id,
         func.sum(PlayerAssociation.is_correct.cast(Integer)).label("score")
     ).filter_by(game_id=game_id).group_by(PlayerAssociation.player_id).all()
 
     scores_dict = {player_id: score or 0 for player_id, score in player_scores}
+    score = sum(scores_dict.values()) >= score_to_do
 
-    emit('game_over_scores', {'scores': scores_dict})
+    socketio.emit('game_result', {'result': "success" if score else "fail", 'score': sum(scores_dict.values())})
