@@ -84,6 +84,21 @@ def join_game(game_id):
     join_room(f"game_{game.id}")
     return jsonify({"message": "Successfully joined game", "game_id": game_id}), 200
 
+@game_bp.route('/game/<int:game_id>/start', methods=['POST'])
+@jwt_required()
+def start_game(game_id):
+    player_id = get_jwt_identity()
+
+    game = Game.query.filter_by(id=game_id, status='waiting').first()
+    if game.owner_id == player_id:
+        game.status = 'running'
+        #TODO emit
+    db.session.commit()
+
+    socketio.join_room(f"game_{game.id}")
+
+    return jsonify({"game_id": game.id, "message": "Game created successfully!"}), 201
+
 def tmp_create_game_and_player(user):
     game = Game.query.filter_by(id=1).first()
 
