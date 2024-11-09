@@ -93,11 +93,35 @@ def start_game(game_id):
     if game.owner_id == player_id:
         game.status = 'running'
         #TODO emit
+        new_round = Round(game_id=game.id, number=1)
+        db.session.add(new_round)
+        db.session.commit()
+        socketio.to(f"game_{game_id}").emit('start')
+
+
+def create_player(player_id, game_id):
+    player = Player.query.filter_by(user_id=player_id, game_id=game_id).first()
+    if not player:
+
+        used_words = {p.initial_word for p in PlayerRound.query.join(Player).filter(Player.game_id == game_id).all()}
+        initial_word = random.choice(characters)
+
+        while initial_word in used_words:
+            initial_word  = random.choice(characters)
+        player = Player(user_id=player.id, game_id=game_id)
+        db.session.add(player)
+        db.session.commit()
+
+        first_round = Round.query.filter_by(game_id=game_id, number=1).first()
+        player_round = PlayerRound(player_id=player_id, round_id=first_round.id, initial_word=initial_word)
+        word_evolution = WordEvolution(game_id=game_id, player_id=player_id, round_id=first_round.id, word=initial_word, character=initial_word)
+        db.session.add(player_round)
+        db.session.add(word_evolution)
+        db.session.commit()
+    #Maybe useless TODO check it
+    broadcast_player_list(game_id)
     db.session.commit()
 
-    socketio.join_room(f"game_{game.id}")
-
-    return jsonify({"game_id": game.id, "message": "Game created successfully!"}), 201
 
 def tmp_create_game_and_player(user):
     game = Game.query.filter_by(id=1).first()
@@ -281,8 +305,9 @@ def get_players(game_id):
 @game_bp.route('/game/<int:game_id>/get_game_infos', methods=['GET'])
 @jwt_required()
 def get_info(game_id):
-    players = Player.query.filter_by(game_id=game_id).all()
     current_player_id = get_jwt_identity()
+    create_player(current_player_idi, game_id)
+    players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
 
     player_data = []
