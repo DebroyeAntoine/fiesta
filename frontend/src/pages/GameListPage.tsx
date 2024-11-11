@@ -8,34 +8,77 @@ interface Game {
   name: string;
   playerCount: number;
   maxPlayers: number;
-  status: string;  // "waiting", "in_progress", etc.
+  status: string;
 }
 
 const GameListPage: React.FC = () => {
   const socket = useSocket();
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
+  const [creatingGame, setCreatingGame] = useState(false);  // Indicate if game creation is in progress
+  const [newGameId, setNewGameId] = useState<number | null>(null);  // Store the game ID for redirection
+  const [gameCreated, setGameCreated] = useState(false);  // Flag to track if the game was created
 
   useEffect(() => {
-    // Récupérer la liste des parties en attente de joueurs
-    socket.emit('get_games');
+    const fetch_games = async () => {
+      try {
+          const token = localStorage.getItem('token');
+          const response = await fetch('game/get_games', {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+              },
+          });
+          if (response.ok) {
+              const data = await response.json();
+              setGames(data.games);
+          }
+      } catch (error) {
+            console.error('Error fetching games', error);
+      }
+    };
+
+    fetch_games();
+
     socket.on('games_list', (data) => setGames(data.games));
 
-    // Nettoyer les événements de socket lorsque le composant est démonté
+    socket.on('game_created', (data) => {
+      if (data.success) {
+        setGames((prevGames) => [
+          ...prevGames,
+          { id: data.game_id, name: 'New Game', playerCount: 1, maxPlayers: 4, status: 'waiting' },
+        ]);
+
+        if (creatingGame) {
+          setGameCreated(true);
+          setNewGameId(data.game_id); // Save ID
+        }
+      }
+    });
+
     return () => {
       socket.off('games_list');
+      socket.off('game_created');
     };
-  }, [socket]);
+  }, [socket, creatingGame]);
+
+  useEffect(() => {
+    if (gameCreated && newGameId !== null) {
+      navigate(`/game/${newGameId}/lobby`);
+      setGameCreated(false);
+    }
+  }, [gameCreated, newGameId, navigate]);
 
   const handleJoinGame = (gameId: number) => {
     socket.emit('join_game', { game_id: gameId });
-    navigate(`/game/${gameId}/lobby`); // Redirige vers le lobby de la partie
+    navigate(`/game/${gameId}/lobby`);
   };
 
   const handleCreateGame = () => {
-    socket.emit('create_game', { name: 'New Game' }, (response: any) => {
+    setCreatingGame(true);
+    socket.emit('create_game', { token: localStorage.getItem('token') }, (response: any) => {
       if (response.success) {
-        navigate(`/game/${response.game_id}/lobby`); // Redirige vers le lobby de la nouvelle partie
       }
     });
   };
@@ -52,7 +95,7 @@ const GameListPage: React.FC = () => {
         </button>
         <div className="game-list space-y-2">
           {games.length > 0 ? (
-            games.map(game => (
+            games.map((game) => (
               <div
                 key={game.id}
                 className="game-item p-4 bg-white rounded-lg shadow-md flex justify-between items-center hover:bg-yellow-100 transition"

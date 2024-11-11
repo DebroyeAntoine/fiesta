@@ -1,5 +1,5 @@
 from flask import jsonify, Blueprint, request
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, decode_token
 from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation, WordEvolution
 from app.utils.character_loader import load_characters_from_file
 from app.socket import socketio
@@ -52,22 +52,45 @@ def delete_all():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@game_bp.route('/game/create', methods=['POST'])
+
+@socketio.on('create_game')
+def create_game(data):
+    try:
+        player_id = decode_token(data.get('token'))['sub']
+
+        new_game = Game(owner_id=player_id, status='waiting')
+        db.session.add(new_game)
+        db.session.commit()
+
+        new_round = Round(game_id=new_game.id, number=1)
+        db.session.add(new_round)
+
+        player = Player(user_id=player_id, game_id=new_game.id)
+        db.session.add(player)
+        db.session.commit()
+
+        join_room(f"game_{new_game.id}")
+
+        emit('game_created', {'game_id': new_game.id, 'success': True})
+
+        return jsonify({"game_id": new_game.id, "success": True}), 201
+    except Exception as e:
+        print(f"Error creating game: {e}")
+        return jsonify({"error": "Failed to create game"}), 500
+
+
+@game_bp.route('/game/get_games', methods=['GET'])
 @jwt_required()
-def create_game():
-    player_id = get_jwt_identity()
-
-    new_game = Game(owner_id=player_id, status='waiting')
-    db.session.add(new_game)
-    db.session.commit()
-
-    player = Player(user_id=player_id, game_id=new_game.id)
-    db.session.add(player)
-    db.session.commit()
-
-    join_room(f"game_{new_game.id}")
-
-    return jsonify({"game_id": new_game.id, "message": "Game created successfully!"}), 201
+def get_games():
+    games = Game.query.filter_by(status='waiting').all()
+    games_list = [{
+        'id': game.id,
+        'name': '',
+        'players': [player.user.username for player in game.players],
+        'maxPlayers': '8',
+        'status': game.status
+    } for game in games]
+    return jsonify({'games': games_list}), 201
 
 @game_bp.route('/game/<int:game_id>/join', methods=['POST'])
 @jwt_required()
@@ -306,7 +329,7 @@ def get_players(game_id):
 @jwt_required()
 def get_info(game_id):
     current_player_id = get_jwt_identity()
-    create_player(current_player_idi, game_id)
+    create_player(current_player_id, game_id)
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
 
