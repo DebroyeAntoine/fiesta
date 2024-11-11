@@ -40,10 +40,15 @@ class Round(db.Model):
 
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    players = db.relationship('Player', backref='game', lazy=True)
+    players = db.relationship('Player', backref='game', lazy=True,foreign_keys='Player.game_id')
     rounds = db.relationship('Round', backref='game', lazy=True)
     current_round = db.Column(db.Integer, default=1)
     owner_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
+    owner = db.relationship(
+        'Player',
+        foreign_keys=[owner_id],  # Utilise explicitement owner_id pour cette relation
+        backref='owned_games'
+    )
     constraint = db.Column(db.String, nullable=True)
     status = db.Column(db.String(20), default='waiting')  # valeurs possibles: waiting, in_progress, ended
 

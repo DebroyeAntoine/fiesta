@@ -12,13 +12,14 @@ from sqlalchemy.orm import  aliased
 CHARACTERS_FILE_PATH = 'app/utils/characters.txt'
 characters = load_characters_from_file(CHARACTERS_FILE_PATH)
 bp = Blueprint("api", __name__)
+auth_bp = Blueprint('auth', __name__)
+game_bp = Blueprint('game', __name__)
 
 @bp.route('/')
 def home():
     print("coucou")
     return jsonify({'message': 'Hello from Fiesta de los Muertos!'})
 
-auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -185,12 +186,11 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
-        player = tmp_create_game_and_player(user)
-        return jsonify({"message": "Login successful!", 'token': access_token, 'gameId': "1", "roundId":"1", "playerId": str(player.id)}), 200
+        #player = tmp_create_game_and_player(user)
+        return jsonify({"message": "Login successful!", 'token': access_token}), 200 #, 'gameId': "1", "roundId":"1", "playerId": str(player.id)}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
 
-game_bp = Blueprint('game', __name__)
 
 @game_bp.route('/game/submit_word', methods=['POST'])
 @jwt_required()
