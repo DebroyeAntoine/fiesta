@@ -71,7 +71,7 @@ const GameListPage: React.FC = () => {
   }, [gameCreated, newGameId, navigate]);
 
   const handleJoinGame = (gameId: number) => {
-    socket.emit('join_game', { game_id: gameId });
+    socket.emit('join_game', { token: localStorage.getItem('token'), game_id: gameId });
     navigate(`/game/${gameId}/lobby`);
   };
 

@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'; // Page d'inscription
 import GamePage from './pages/GamePage'; // Page d'inscription
 import GameOverPage from './pages/GameOver';
 import GameListPage from './pages/GameListPage';
+import LobbyPage from './pages/LobbyPage';
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/game/:gameId" element={<GamePage />} />
           <Route path="/gameOver/:gameId" element={<GameOverPage />} />
           <Route path="/gameList" element={<GameListPage />} />
+          <Route path="/game/:gameId/lobby" element={<LobbyPage />} />
         {/* Ajoute d'autres routes ici */}
         </Routes>
       </Router>

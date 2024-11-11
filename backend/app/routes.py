@@ -183,11 +183,44 @@ def tmp_create_game_and_player(user):
 @socketio.on('join_game')
 def on_join_game(data):
     game_id = data['game_id']
-    username = get_jwt_identity()
+    user_id = decode_token(data.get('token'))['sub']
+    username = User.query.filter_by(id = user_id).first().username
+    player = Player(user_id=user_id, game_id=game_id)
+    db.session.add(player)
+    db.session.commit()
     join_room(f"game_{game_id}")
 
-    emit('user_joined', {'message': f'User {username} has joined the game'}, room=f"game_{game_id}")
+    update_player_list(game_id)
 
+    emit('player_joined', {'player': username}, room=f"game_{game_id}")
+
+
+def update_player_list(game_id):
+    game_players = []
+    players = Player.query.filter_by(game_id=game_id).all()
+    for player in players:
+        game_players.append(User.query.get(player.user_id).username)
+    print(game_players)
+    socketio.emit('players_update', game_players, room=f"game_{game_id}")
+
+@game_bp.route('/game/<int:game_id>/get_lobby', methods=['GET'])
+@jwt_required()
+def get_lobby(game_id):
+    # Récupère le jeu et l'utilisateur actuel via JWT
+    game = Game.query.get(game_id)
+    current_user_id = get_jwt_identity()
+    players = Player.query.filter_by(game_id=game_id).all()
+
+    # Prépare la liste des noms d'utilisateur uniquement
+    player_usernames = [player.user.username for player in players]
+
+    # Vérifie si l'utilisateur actuel est le propriétaire de la partie
+    is_owner = any(player.id == game.owner_id and player.user_id == current_user_id for player in players)
+
+    return jsonify({
+        'players': player_usernames,  # Liste des usernames seulement
+        'isOwner': is_owner  # Vrai ou faux seulement pour l'utilisateur actuel
+    }), 200
 # WebSocket event when a user leaves a game room
 @socketio.on('leave_game')
 def on_leave_game(data):
