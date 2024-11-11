@@ -47,7 +47,7 @@ const GameListPage: React.FC = () => {
       if (data.success) {
         setGames((prevGames) => [
           ...prevGames,
-          { id: data.game_id, name: 'New Game', playerCount: 1, maxPlayers: 4, status: 'waiting' },
+          { id: data.game_id, name: 'New Game', playerCount: 1, maxPlayers: 8, status: 'waiting' },
         ]);
 
         if (creatingGame) {
@@ -77,10 +77,7 @@ const GameListPage: React.FC = () => {
 
   const handleCreateGame = () => {
     setCreatingGame(true);
-    socket.emit('create_game', { token: localStorage.getItem('token') }, (response: any) => {
-      if (response.success) {
-      }
-    });
+    socket.emit('create_game', { token: localStorage.getItem('token') }, () => {});
   };
 
   return (

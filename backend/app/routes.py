@@ -70,10 +70,8 @@ def create_game(data):
         db.session.commit()
 
         join_room(f"game_{new_game.id}")
+        emit('game_created', {'game_id': new_game.id, 'success': True}, broadcast=True)
 
-        emit('game_created', {'game_id': new_game.id, 'success': True})
-
-        return jsonify({"game_id": new_game.id, "success": True}), 201
     except Exception as e:
         print(f"Error creating game: {e}")
         return jsonify({"error": "Failed to create game"}), 500
