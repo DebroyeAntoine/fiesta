@@ -145,40 +145,6 @@ def create_player(player_id, game_id):
     db.session.commit()
 
 
-def tmp_create_game_and_player(user):
-    game = Game.query.filter_by(id=1).first()
-
-    if not game:
-        game = Game(id=1, current_round=1)
-        db.session.add(game)
-        db.session.commit()
-
-        new_round = Round(game_id=game.id, number=1)
-        db.session.add(new_round)
-        db.session.commit()
-
-    player = Player.query.filter_by(user_id=user.id, game_id=game.id).first()
-    if not player:
-
-        used_words = {p.initial_word for p in PlayerRound.query.join(Player).filter(Player.game_id == game.id).all()}
-        initial_word = random.choice(characters)
-
-        while initial_word in used_words:
-            initial_word  = random.choice(characters)
-        player = Player(user_id=user.id, game_id=game.id)
-        db.session.add(player)
-        db.session.commit()
-
-        first_round = Round.query.filter_by(game_id=game.id, number=1).first()
-        player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
-        word_evolution = WordEvolution(game_id=game.id, player_id=player.id, round_id=first_round.id, word=initial_word, character=initial_word)
-        db.session.add(player_round)
-        db.session.add(word_evolution)
-        db.session.commit()
-    broadcast_player_list(game.id)
-    return player
-
-
 # WebSocket event when a user joins a game room
 @socketio.on('join_game')
 def on_join_game(data):
@@ -243,7 +209,6 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
-        #player = tmp_create_game_and_player(user)
         return jsonify({"message": "Login successful!", 'token': access_token}), 200 #, 'gameId': "1", "roundId":"1", "playerId": str(player.id)}), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
@@ -385,14 +350,29 @@ def get_info(game_id):
 def get_current_round(game_id):
     current_player_id = get_jwt_identity()
 
-    round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
-    if not round:
+    player = Player.query.filter_by(user_id=current_player_id, game_id=game_id).first()
+    if not player:
+        player = Player(user_id=current_player_id, game_id=game_id)
+        db.session.add(player)
+        db.session.commit()
+
+    first_round = Round.query.filter_by(game_id=game_id, number=1).first()
+    if not first_round:
         return jsonify({"error": "No rounds found"}), 404
 
-    player_round = PlayerRound.query.filter_by(round_id=round.id, player_id=current_player_id).first()
-
+    player_round = PlayerRound.query.filter_by(round_id=first_round.id, player_id=player.id).first()
     if not player_round:
-        return jsonify({"error": "No player round found for the current player"}), 404
+        used_words = {p.initial_word for p in PlayerRound.query.join(Player).filter(Player.game_id == game_id).all()}
+        initial_word = random.choice(characters)
+        while initial_word in used_words:
+            initial_word = random.choice(characters)
+
+        player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
+        db.session.add(player_round)
+
+        word_evolution = WordEvolution(game_id=game_id, player_id=player.id, round_id=first_round.id, word=initial_word, character=initial_word)
+        db.session.add(word_evolution)
+        db.session.commit()
 
     return jsonify({"initial_word": player_round.initial_word})
 
