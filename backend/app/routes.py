@@ -114,12 +114,12 @@ def start_game(game_id):
     game = Game.query.filter_by(id=game_id, status='waiting').first()
     if game.owner_id == player_id:
         game.status = 'running'
-        #TODO emit
         new_round = Round(game_id=game.id, number=1)
         db.session.add(new_round)
         db.session.commit()
-        socketio.to(f"game_{game_id}").emit('start')
+        socketio.emit('game_started', room=f"game_{game_id}")
 
+        return jsonify({"message": "Successfully started game", "game_id": game_id}), 200
 
 def create_player(player_id, game_id):
     player = Player.query.filter_by(user_id=player_id, game_id=game_id).first()
@@ -225,10 +225,13 @@ def get_lobby(game_id):
 @socketio.on('leave_game')
 def on_leave_game(data):
     game_id = data['game_id']
-    username = get_jwt_identity()
+    game = Game.query.get(game_id)
+    user_id = decode_token(data.get('token'))['sub']
+    game.remove(user_id)
+    db.commit()
     leave_room(f"game_{game_id}")
 
-    emit('user_left', {'message': f'User {username} has left the game'}, room=f"game_{game_id}")
+    #emit('user_left', {'message': f'User {username} has left the game'}, room=f"game_{game_id}")
 
 
 @auth_bp.route('/login', methods=['POST'])

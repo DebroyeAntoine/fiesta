@@ -1,5 +1,6 @@
 // src/pages/Lobby.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import PlayerList from '../components/PlayerList';
@@ -13,6 +14,7 @@ const Lobby: React.FC = () => {
   const [players, setPlayers] = useState([]);
   const [isOwner, setIsOwner] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const navigate = useNavigate();
 
 
 
@@ -49,7 +51,7 @@ const Lobby: React.FC = () => {
     socket.on('players_update', (data) => { console.log(data); setPlayers(data);});
     socket.on('player_left', data => setPlayers(data.players));
     socket.on('player_ready_update', data => setPlayers(data.players));
-//    socket.on('game_started', () => redirectToGame());
+    socket.on('game_started', () => navigate(`/game/${gameId}`));
     socket.on('game_info', data => setIsOwner(data.owner_id === socket.id));
 
     return () => {
@@ -60,15 +62,25 @@ const Lobby: React.FC = () => {
       socket.off('game_started');
       socket.off('game_info');
     };
-  }, [socket, gameId]);
+  }, [socket, gameId, navigate]);
 
   const handleReady = () => {
     socket.emit('player_ready', { game_id: gameId });
     setIsReady(!isReady);
   };
 
-  const handleStartGame = () => {
-    socket.emit('start_game', { game_id: gameId });
+  const handleStartGame = async () => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/game/${gameId}/start`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+    });
+    if (!response.ok) {
+        console.error("error when creating game");
+    }
   };
 
   return (
