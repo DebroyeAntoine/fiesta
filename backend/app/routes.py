@@ -114,36 +114,10 @@ def start_game(game_id):
     game = Game.query.filter_by(id=game_id, status='waiting').first()
     if game.owner_id == player_id:
         game.status = 'running'
-        new_round = Round(game_id=game.id, number=1)
-        db.session.add(new_round)
         db.session.commit()
         socketio.emit('game_started', room=f"game_{game_id}")
 
         return jsonify({"message": "Successfully started game", "game_id": game_id}), 200
-
-def create_player(player_id, game_id):
-    player = Player.query.filter_by(user_id=player_id, game_id=game_id).first()
-    if not player:
-
-        used_words = {p.initial_word for p in PlayerRound.query.join(Player).filter(Player.game_id == game_id).all()}
-        initial_word = random.choice(characters)
-
-        while initial_word in used_words:
-            initial_word  = random.choice(characters)
-        player = Player(user_id=player.id, game_id=game_id)
-        db.session.add(player)
-        db.session.commit()
-
-        first_round = Round.query.filter_by(game_id=game_id, number=1).first()
-        player_round = PlayerRound(player_id=player_id, round_id=first_round.id, initial_word=initial_word)
-        word_evolution = WordEvolution(game_id=game_id, player_id=player_id, round_id=first_round.id, word=initial_word, character=initial_word)
-        db.session.add(player_round)
-        db.session.add(word_evolution)
-        db.session.commit()
-    #Maybe useless TODO check it
-    broadcast_player_list(game_id)
-    db.session.commit()
-
 
 # WebSocket event when a user joins a game room
 @socketio.on('join_game')
@@ -172,21 +146,19 @@ def update_player_list(game_id):
 @game_bp.route('/game/<int:game_id>/get_lobby', methods=['GET'])
 @jwt_required()
 def get_lobby(game_id):
-    # Récupère le jeu et l'utilisateur actuel via JWT
     game = Game.query.get(game_id)
     current_user_id = get_jwt_identity()
     players = Player.query.filter_by(game_id=game_id).all()
 
-    # Prépare la liste des noms d'utilisateur uniquement
     player_usernames = [player.user.username for player in players]
 
-    # Vérifie si l'utilisateur actuel est le propriétaire de la partie
-    is_owner = any(player.id == game.owner_id and player.user_id == current_user_id for player in players)
+    is_owner = game.owner_id == current_user_id
 
     return jsonify({
-        'players': player_usernames,  # Liste des usernames seulement
-        'isOwner': is_owner  # Vrai ou faux seulement pour l'utilisateur actuel
+        'players': player_usernames,
+        'isOwner': is_owner
     }), 200
+
 # WebSocket event when a user leaves a game room
 @socketio.on('leave_game')
 def on_leave_game(data):
@@ -328,7 +300,6 @@ def get_players(game_id):
 @jwt_required()
 def get_info(game_id):
     current_player_id = get_jwt_identity()
-    create_player(current_player_id, game_id)
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
 
@@ -356,25 +327,28 @@ def get_current_round(game_id):
         db.session.add(player)
         db.session.commit()
 
-    first_round = Round.query.filter_by(game_id=game_id, number=1).first()
-    if not first_round:
+    current_round = Round.query.filter_by(game_id=game_id).order_by(Round.number.desc()).first()
+    if not current_round:
         return jsonify({"error": "No rounds found"}), 404
 
-    player_round = PlayerRound.query.filter_by(round_id=first_round.id, player_id=player.id).first()
+    player_round = PlayerRound.query.filter_by(round_id=current_round.id, player_id=player.id).first()
     if not player_round:
         used_words = {p.initial_word for p in PlayerRound.query.join(Player).filter(Player.game_id == game_id).all()}
         initial_word = random.choice(characters)
         while initial_word in used_words:
             initial_word = random.choice(characters)
 
-        player_round = PlayerRound(player_id=player.id, round_id=first_round.id, initial_word=initial_word)
+        player_round = PlayerRound(player_id=player.id, round_id=current_round.id, initial_word=initial_word)
         db.session.add(player_round)
 
-        word_evolution = WordEvolution(game_id=game_id, player_id=player.id, round_id=first_round.id, word=initial_word, character=initial_word)
+        word_evolution = WordEvolution(game_id=game_id, player_id=player.id, round_id=current_round.id, word=initial_word, character=initial_word)
         db.session.add(word_evolution)
         db.session.commit()
 
-    return jsonify({"initial_word": player_round.initial_word})
+    return jsonify({
+        "round_number": current_round.number,
+        "initial_word": player_round.initial_word
+    })
 
 @game_bp.route('/game/<int:game_id>/advance_round', methods=['POST'])
 @jwt_required()
