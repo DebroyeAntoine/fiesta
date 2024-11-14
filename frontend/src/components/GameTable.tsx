@@ -129,7 +129,9 @@ const GameTable: React.FC<GameTableProps> = ({ gameId}) => {
 
     return (
         <div className="game-table relative w-full min-h-screen flex flex-col justify-start items-center">
+        <div className="absolute top-4 left-4">
             <InitialWord gameId={gameId} refreshKey={newRound} />
+        </div>
             {/* Section des avatars des joueurs */}
             <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-4 mt-4">
                 {Array.isArray(players) && players.length > 0 ? (
