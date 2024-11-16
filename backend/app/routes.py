@@ -164,9 +164,12 @@ def get_lobby(game_id):
 def on_leave_game(data):
     game_id = data['game_id']
     game = Game.query.get(game_id)
-    user_id = decode_token(data.get('token'))['sub']
-    game.remove(user_id)
-    db.commit()
+    user_id = decode_token(data.get('player_token'))['sub']
+    player = Player.query.filter_by(game_id=game_id, user_id=user_id).first()
+    #player.game_id = None
+    db.session.delete(player)
+    db.session.commit()
+    update_player_list(game_id)
     leave_room(f"game_{game_id}")
 
     #emit('user_left', {'message': f'User {username} has left the game'}, room=f"game_{game_id}")
