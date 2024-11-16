@@ -166,13 +166,24 @@ def on_leave_game(data):
     game = Game.query.get(game_id)
     user_id = decode_token(data.get('player_token'))['sub']
     player = Player.query.filter_by(game_id=game_id, user_id=user_id).first()
-    #player.game_id = None
-    db.session.delete(player)
-    db.session.commit()
-    update_player_list(game_id)
-    leave_room(f"game_{game_id}")
 
-    #emit('user_left', {'message': f'User {username} has left the game'}, room=f"game_{game_id}")
+    if game and player:
+        if game.owner_id == user_id:
+            # Get all players execpted the owner
+            players = Player.query.filter_by(game_id=game_id).filter(Player.user_id != game.owner_id).all()
+            if len(players) > 0:
+                game.owner_id = players[0].user_id
+                db.session.commit()
+                emit('changing_ownership', {}, room=f"game_{game_id}")
+            else:
+                round = Round.query.filter_by(game_id=game_id).first()
+                db.session.delete(round)
+                db.session.delete(game)
+
+        db.session.delete(player)
+        db.session.commit()
+        update_player_list(game_id)
+        leave_room(f"game_{game_id}")
 
 
 @auth_bp.route('/login', methods=['POST'])

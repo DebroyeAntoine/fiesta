@@ -48,14 +48,15 @@ const Lobby: React.FC = () => {
         //}
         console.log(data.player);
     });
-    socket.on('players_update', (data) => { console.log(data); setPlayers(data);});
+    socket.on('players_update', (data) => {setPlayers(data);});
+    socket.on('changing_ownership', () =>  {console.log("coucou");fetch_games();});
     socket.on('player_left', data => setPlayers(data.players));
     socket.on('player_ready_update', data => setPlayers(data.players));
     socket.on('game_started', () => navigate(`/game/${gameId}`));
     socket.on('game_info', data => setIsOwner(data.owner_id === socket.id));
 
     return () => {
-      socket.emit('leave_game', { game_id: gameId });
+      socket.emit('leave_game', { game_id: gameId, player_token: localStorage.getItem('token')});
       socket.off('player_joined');
       socket.off('player_left');
       socket.off('players_update');

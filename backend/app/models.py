@@ -63,7 +63,7 @@ class Player(db.Model):
         return User.query.get(self.user_id).username
     player_rounds = db.relationship('PlayerRound', backref='player', lazy=True)
     def __repr__(self):
-        return f'<Player {self.user.username} playing as {self.character}>'
+        return f'<Player {self.user.username} playing as {self.id} with user {self.user_id}>'
 
 
 # This class will store the game results
