@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
+import GlowButton from '../components/GlowButton';
 
 interface Game {
   id: number;
@@ -84,13 +85,10 @@ const GameListPage: React.FC = () => {
     <div className="game-list-page min-h-screen bg-yellow-50 p-6 flex flex-col items-center">
       <h1 className="text-3xl text-orange-600 font-bold mb-6">🎉 Select or Create a Game 🎉</h1>
       <div className="w-full max-w-2xl space-y-4">
-        <button
-          className="create-game-button bg-purple-500 text-white py-2 px-6 rounded-full w-full hover:bg-purple-600 transition duration-300"
-          onClick={handleCreateGame}
-        >
-          Create New Game
-        </button>
-        <div className="game-list space-y-2">
+      <GlowButton variant="purple" size="lg" onClick={handleCreateGame} disabled={false}>
+        Create New Game
+      </GlowButton>
+      <div className="game-list space-y-2">
           {games.length > 0 ? (
             games.map((game) => (
               <div
