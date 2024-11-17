@@ -179,6 +179,7 @@ def on_leave_game(data):
                 round = Round.query.filter_by(game_id=game_id).first()
                 db.session.delete(round)
                 db.session.delete(game)
+                db.session.commit()
 
         db.session.delete(player)
         db.session.commit()
@@ -316,6 +317,7 @@ def get_info(game_id):
     current_player_id = get_jwt_identity()
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
+    constraints = Game.query.filter_by(game_id=game_id).first().constraints
 
     player_data = []
     for player in players:
@@ -328,7 +330,7 @@ def get_info(game_id):
             "word_submitted": submitted
         })
 
-    return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player_id})
+    return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player_id, "constraints": constraints})
 
 @game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
 @jwt_required()

@@ -1,6 +1,7 @@
 # app/models.py
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -49,14 +50,14 @@ class Game(db.Model):
         foreign_keys=[owner_id],  # Utilise explicitement owner_id pour cette relation
         backref='owned_games'
     )
-    constraint = db.Column(db.String, nullable=True)
+    constraints = db.Column(JSON, default=list)
     status = db.Column(db.String(20), default='waiting')  # valeurs possibles: waiting, in_progress, ended
 
 
 class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=True)
 
     @property
     def username(self):
