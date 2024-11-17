@@ -50,7 +50,7 @@ class Game(db.Model):
         foreign_keys=[owner_id],  # Utilise explicitement owner_id pour cette relation
         backref='owned_games'
     )
-    constraints = db.Column(JSON, default=list)
+    constraints = db.Column(JSON, default=list, nullable=True)
     status = db.Column(db.String(20), default='waiting')  # valeurs possibles: waiting, in_progress, ended
 
 

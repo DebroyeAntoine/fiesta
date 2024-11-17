@@ -317,7 +317,8 @@ def get_info(game_id):
     current_player_id = get_jwt_identity()
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
-    constraints = Game.query.filter_by(game_id=game_id).first().constraints
+    game = Game.query.filter_by(id=game_id).first()
+    constraints = game.constraints
 
     player_data = []
     for player in players:
