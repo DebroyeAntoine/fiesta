@@ -18,14 +18,12 @@ interface Player {
 
 const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
     const [playerId, setPlayerId] = useState<number>(0);
-    const [word, setWord] = useState("");
-    const [constraints, setConstraints] = useState<string[]>([
-        "tesssssssssssssssst",
-    ]);
+    const [word, setWord] = useState<string>("");
+    const [constraints, setConstraints] = useState<string[]>([]);
     const [players, setPlayers] = useState<Player[]>([]);
     const [submittedPlayers, setSubmittedPlayers] = useState<number[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [newRound, setNewRound] = useState(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [newRound, setNewRound] = useState<boolean>(false);
     const [roundId, setRoundId] = useState<number>(0);
     const navigate = useNavigate();
     const socket = useSocket();
@@ -41,7 +39,6 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
         if (playerId === null) return;
         try {
             const token = localStorage.getItem("token");
-
             const response = await fetch(`/game/submit_word`, {
                 method: "POST",
                 headers: {
@@ -56,7 +53,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
             });
 
             if (response.ok) {
-                setSubmittedPlayers((prev) => [...prev, playerId as number]);
+                setSubmittedPlayers((prev) => [...prev, playerId]);
             }
         } catch (error) {
             console.error("Error submitting word:", error);
@@ -79,9 +76,10 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
                 setPlayers(data.players);
                 setRoundId(data.round_id);
                 setPlayerId(data.player_id);
+                setConstraints(data.constraints || []);
                 setLoading(false);
             } else {
-                console.error('Failed to fetch game info');
+                console.error("Failed to fetch game info");
                 setLoading(false);
             }
         };
@@ -169,6 +167,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
                     </div>
                 )}
             </div>
+
             {/* Section des avatars des joueurs */}
             <div className="player-row flex justify-center items-center gap-6 flex-wrap mb-4 mt-4">
                 {Array.isArray(players) && players.length > 0 ? (
@@ -177,9 +176,8 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
                             key={player.id}
                             className="player-container flex flex-col items-center"
                         >
-                            {player.id === playerId ? (
-                                <></>
-                            ) : (
+                            {/* N'affiche pas l'avatar du joueur courant */}
+                            {player.id !== playerId ? (
                                 <PlayerAvatar
                                     player={{
                                         id: player.id,
@@ -189,7 +187,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
                                         player.id
                                     )}
                                 />
-                            )}
+                            ) : null}
                         </div>
                     ))
                 ) : (
@@ -198,15 +196,16 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
             </div>
 
             {/* Section de la SkullCard du joueur courant */}
-            {players.some((player) => player.id === playerId) && (
-                <div className="skull-card mt-6">
-                    <SkullCardInput
-                        word={word}
-                        setWord={setWord}
-                        handleValidate={handleValidate}
-                    />
-                </div>
-            )}
+            {playerId !== null &&
+                players.some((player) => player.id === playerId) && (
+                    <div className="skull-card mt-6">
+                        <SkullCardInput
+                            word={word}
+                            setWord={setWord}
+                            handleValidate={handleValidate}
+                        />
+                    </div>
+                )}
         </div>
     );
 };
