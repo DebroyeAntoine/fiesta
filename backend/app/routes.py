@@ -59,9 +59,11 @@ def create_game(data):
         player_id = decode_token(data.get('token'))['sub']
 
         new_game = Game(owner_id=player_id, status='waiting')
+        constraints = new_game.get_constraints()
+        constraints.append("Lettre P")
+        new_game.set_constraints(constraints)
         db.session.add(new_game)
         db.session.commit()
-
         new_round = Round(game_id=new_game.id, number=1)
         db.session.add(new_round)
 
@@ -318,7 +320,7 @@ def get_info(game_id):
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
     game = Game.query.filter_by(id=game_id).first()
-    constraints = game.constraints
+    constraints = game.get_constraints()
 
     player_data = []
     for player in players:

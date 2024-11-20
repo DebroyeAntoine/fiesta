@@ -1,7 +1,7 @@
 # app/models.py
+import json
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -50,8 +50,16 @@ class Game(db.Model):
         foreign_keys=[owner_id],  # Utilise explicitement owner_id pour cette relation
         backref='owned_games'
     )
-    constraints = db.Column(JSON, default=list, nullable=True)
+    constraints = db.Column(db.Text, default='[]', nullable=True)
+
     status = db.Column(db.String(20), default='waiting')  # valeurs possibles: waiting, in_progress, ended
+    def get_constraints(self):
+        # Serialization of the string
+        return json.loads(self.constraints) if self.constraints else []
+
+    def set_constraints(self, value):
+        # deserealization
+        self.constraints = json.dumps(value)
 
 
 class Player(db.Model):
