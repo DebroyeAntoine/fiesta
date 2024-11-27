@@ -272,8 +272,20 @@ def emit_new_round_event(previous_round_id, game_id):
     socketio.emit('new_round', {'round_id': new_round.id})
 
 def emit_game_over(game_id):
-    initial_words = [player_round.initial_word for player_round in PlayerRound.query.filter_by(round_id=1).all()]
-    submitted_words = [player_round.word_submitted for player_round in PlayerRound.query.filter_by(round_id=4).all()]
+    initial_words = [
+        player_round.initial_word
+        for player_round in PlayerRound.query.join(Round)
+        .filter(Round.game_id == game_id, Round.number == 1)
+        .all()
+    ]
+
+    submitted_words = [
+        player_round.word_submitted
+        for player_round in PlayerRound.query.join(Round)
+        .filter(Round.game_id == game_id, Round.number == 4)
+        .all()
+    ]
+
     words_to_sent = initial_words[:]
 
     while len(words_to_sent) < 8:
@@ -405,15 +417,22 @@ def handle_submit_associations(game_id):
         word_round_4 = aliased(WordEvolution)
         word_round_1 = aliased(WordEvolution)
 
+        round_4 = Round.query.filter_by(game_id=game_id, number=4).first()
+        round_1 = Round.query.filter_by(game_id=game_id, number=1).first()
+
+        if round_4 is None or round_1 is None:
+            print(f"Erreur : Round 4 ou Round 1 non trouvé pour le jeu {game_id}")
+            continue
+
         # Find the initial character for the skull card
         initial_evolution = db.session.query(word_round_1.character).select_from(word_round_1).join(
             word_round_4,
             (word_round_4.word == skull_word) &
-            (word_round_4.round_id == 4) &
+            (word_round_4.round_id == round_4.id) &
             (word_round_4.game_id == game_id) &
             (word_round_4.player_id == word_round_1.player_id)
         ).filter(
-            word_round_1.round_id == 1,
+            word_round_1.round_id == round_1.id,
             word_round_1.game_id == game_id
         ).first()
         if initial_evolution is None:
