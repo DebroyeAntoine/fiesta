@@ -272,6 +272,9 @@ def emit_new_round_event(previous_round_id, game_id):
     socketio.emit('new_round', {'round_id': new_round.id})
 
 def emit_game_over(game_id):
+    game = Game.query.filter_by(id=game_id).first()
+    game.status = 'ended'
+    db.session.commit()
     initial_words = [
         player_round.initial_word
         for player_round in PlayerRound.query.join(Round)
