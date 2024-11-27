@@ -33,7 +33,7 @@ class PlayerRound(db.Model):
 class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
-    number = db.Column(db.Integer, nullable=False)  # TODO remove or use it
+    number = db.Column(db.Integer, nullable=False)
     player_rounds = db.relationship('PlayerRound', backref='round', lazy=True)
 
     def __repr__(self):

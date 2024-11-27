@@ -238,7 +238,8 @@ def submit_word():
         all_submitted = submitted_count == total_players_count
 
         if all_submitted:
-            if round_id == 4:
+            current_round_number = Round.query.get(round_id).number
+            if current_round_number == 4:
                 emit_game_over(game_id)
             else:
                 emit_new_round_event(round_id, game_id)
@@ -253,8 +254,8 @@ def emit_new_round_event(previous_round_id, game_id):
     new_words = {}
 
     submitted_words = PlayerRound.query.filter_by(round_id=previous_round_id).all()
-
-    new_round = Round(game_id=game_id, number=Round.query.filter_by(game_id=game_id).count() + 1)
+    previous_round = Round.query.get(previous_round_id)
+    new_round = Round(game_id=game_id, number=previous_round.number + 1)
     db.session.add(new_round)
     db.session.commit()
 
