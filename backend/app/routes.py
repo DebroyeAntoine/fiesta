@@ -143,7 +143,7 @@ def update_player_list(game_id):
     for player in players:
         game_players.append(User.query.get(player.user_id).username)
     print(game_players)
-    socketio.emit('players_update', game_players, room=f"game_{game_id}")
+    socketio.emit('players_update', {'players': game_players}, room=f"game_{game_id}")
 
 @game_bp.route('/game/<int:game_id>/get_lobby', methods=['GET'])
 @jwt_required()
