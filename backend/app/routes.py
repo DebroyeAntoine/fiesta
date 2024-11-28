@@ -484,4 +484,4 @@ def calculate_scores_and_notify(game_id):
     scores_dict = {player_id: score or 0 for player_id, score in player_scores}
     score = sum(scores_dict.values()) >= score_to_do
 
-    socketio.emit('game_result', {'result': "success" if score else "fail", 'score': sum(scores_dict.values())})
+    socketio.emit('game_result', {'result': "success" if score else "fail", 'score': sum(scores_dict.values())}, room=f'game_{game_id}')
