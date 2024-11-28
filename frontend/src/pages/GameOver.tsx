@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import SkullWordCard from "../components/SkullWordCard";
+import ScoreDisplay from "../components/ScoreDisplay";
 import { useSocket } from "../context/SocketContext";
 
 const GameOverPage: React.FC = () => {
@@ -101,11 +102,7 @@ const GameOverPage: React.FC = () => {
             )}
 
             {score != null ? (
-                <div className="score-section text-center text-black">
-                    <h2 className="text-3xl mb-6">Votre Score Final :</h2>
-                    <p className="text-2xl">{score} points</p>{" "}
-                    {/* Affichez le score ici */}
-                </div>
+                <ScoreDisplay score={score} />
             ) : (
                 <>
                     <div className="skull-word-cards grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
