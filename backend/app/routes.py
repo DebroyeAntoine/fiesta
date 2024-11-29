@@ -252,8 +252,7 @@ def emit_new_round_event(previous_round_id, game_id):
     players = Player.query.filter_by(game_id=game_id).all()
 
     new_words = {}
-
-    submitted_words = PlayerRound.query.filter_by(round_id=previous_round_id).all()
+    submitted_words = PlayerRound.query.filter_by(round_id=previous_round_id).order_by(PlayerRound.player_id).all()
     previous_round = Round.query.get(previous_round_id)
     new_round = Round(game_id=game_id, number=previous_round.number + 1)
     db.session.add(new_round)
