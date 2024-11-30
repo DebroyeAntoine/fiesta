@@ -16,12 +16,14 @@ const GameOverPage: React.FC = () => {
         skullWords: string[];
         game_id: number;
     } = location.state || {};
+
     const [selectedCharacters, setSelectedCharacters] = useState<
         Array<string | null>
     >(Array(skullWords.length).fill(null));
     const [waiting, setWaiting] = useState(false);
-    const [score, setScore] = useState();
-    const [gameResultReceived, setGameResultReceived] = useState(false); // flag to know if we already received the socket event before fetch answer
+    const [score, setScore] = useState<number | null>(null);
+    const [isOwner, setIsOwner] = useState<boolean>(false);
+    const [gameResultReceived, setGameResultReceived] = useState(false);
 
     const handleCharacterSelect = (index: number, character: string) => {
         const newSelections = [...selectedCharacters];
@@ -107,7 +109,7 @@ const GameOverPage: React.FC = () => {
             )}
 
             {score != null ? (
-                <ScoreDisplay score={score} />
+                <ScoreDisplay score={score} isOwner={isOwner} />
             ) : (
                 <>
                     <div className="skull-word-cards grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">

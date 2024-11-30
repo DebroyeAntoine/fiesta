@@ -413,6 +413,10 @@ def handle_submit_associations(game_id):
     player_id = get_jwt_identity()
     data = request.get_json()
     associations = data['associations']
+    game = Game.query.get(game_id)
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+    is_owner = game.owner_id == player_id
 
     for association in associations:
         skull_word = association['skull_word']
@@ -461,7 +465,7 @@ def handle_submit_associations(game_id):
     if all_submitted:
         calculate_scores_and_notify(game_id)
 
-    return jsonify({"message": "Associations submitted successfully"}), 200
+    return jsonify({"message": "Associations submitted successfully", "isOwner": is_owner}), 200
 
 def check_all_players_submitted(game_id):
     game = Game.query.get(game_id)
