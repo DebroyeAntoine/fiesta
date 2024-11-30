@@ -56,8 +56,12 @@ const GameOverPage: React.FC = () => {
             );
 
             if (response.ok) {
-                if (gameResultReceived) {
-                    setWaiting(true); // Show waiting screen when validate
+                const data = await response.json();
+                setIsOwner(data.isOwner);
+
+                // Only set waiting to true if game result hasn't been received
+                if (!gameResultReceived) {
+                    setWaiting(true);
                 }
             } else {
                 console.error("Error submitting associations");
@@ -69,15 +73,16 @@ const GameOverPage: React.FC = () => {
 
     useEffect(() => {
         if (socket) {
-            socket.on("game_result", (data) => {
-                console.log("coucou");
+            const handleGameResult = (data: { score: number }) => {
                 setScore(data.score);
                 setGameResultReceived(true);
-                setWaiting(false);
-            });
+                setWaiting(false); // Always set waiting to false when game result is received
+            };
+
+            socket.on("game_result", handleGameResult);
 
             return () => {
-                socket.off("game_result");
+                socket.off("game_result", handleGameResult);
             };
         }
     }, [socket]);
@@ -93,7 +98,7 @@ const GameOverPage: React.FC = () => {
             </h1>
 
             {/* Overlay en attente */}
-            {waiting && (
+            {waiting && score === null && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
                     <div className="text-center text-2xl text-white p-6 bg-gray-800 bg-opacity-90 shadow-lg rounded-lg">
                         <p>En attente de validation des autres joueurs...</p>
