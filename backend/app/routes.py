@@ -206,11 +206,12 @@ def login():
 @game_bp.route('/game/submit_word', methods=['POST'])
 @jwt_required()
 def submit_word():
-    current_player_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     data = request.get_json()
     word = data.get('word')
     round_id = data.get('round_id')
     game_id = data.get('game_id')
+    current_player_id = Player.query.filter_by(user_id=user_id, game_id=game_id).first().id
 
     player_round = PlayerRound.query.filter_by(player_id=current_player_id, round_id=round_id).first()
 
@@ -249,7 +250,7 @@ def submit_word():
         return jsonify({"error": "PlayerRound not found!"}), 404
 
 def emit_new_round_event(previous_round_id, game_id):
-    players = Player.query.filter_by(game_id=game_id).all()
+    players = Player.query.filter_by(game_id=game_id).order_by(Player.id).all()
 
     new_words = {}
     submitted_words = PlayerRound.query.filter_by(round_id=previous_round_id).order_by(PlayerRound.player_id).all()
@@ -260,7 +261,7 @@ def emit_new_round_event(previous_round_id, game_id):
 
     # fill new words with a rotation of old words
     for index, player in enumerate(players):
-        submitted_word = submitted_words[(index + 1) % len(submitted_words)].word_submitted
+        submitted_word = submitted_words[(index - 1) % len(submitted_words)].word_submitted
         new_words[player.id] = submitted_word
 
         player_round = PlayerRound(player_id=player.id, round_id=new_round.id, initial_word=submitted_word)
@@ -332,6 +333,7 @@ def get_players(game_id):
 @jwt_required()
 def get_info(game_id):
     current_player_id = get_jwt_identity()
+    current_player = Player.query.filter_by(user_id=current_player_id, game_id=game_id).first()
     players = Player.query.filter_by(game_id=game_id).all()
     current_round = Round.query.filter_by(game_id=game_id).order_by(Round.id.desc()).first()
     game = Game.query.filter_by(id=game_id).first()
@@ -348,7 +350,7 @@ def get_info(game_id):
             "word_submitted": submitted
         })
 
-    return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player_id, "constraints": constraints})
+    return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player.id, "constraints": constraints})
 
 @game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
 @jwt_required()
