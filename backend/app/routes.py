@@ -386,27 +386,6 @@ def get_current_round(game_id):
         "initial_word": player_round.initial_word
     })
 
-@game_bp.route('/game/<int:game_id>/advance_round', methods=['POST'])
-@jwt_required()
-def advance_round(game_id):
-    game = Game.query.get_or_404(game_id)
-
-    if game.current_round > 4:
-        return jsonify({"message": "Game over"}), 200
-
-    current_round = Round.query.filter_by(game_id=game.id, number=game.current_round).first()
-    player_rounds = PlayerRound.query.filter_by(round_id=current_round.id).all()
-    players = Player.query.filter_by(game_id=game.id).all()
-
-    if len(player_rounds) < len(players):
-        return jsonify({"message": "Not all players have submitted their words"}), 400
-
-    game.current_round += 1
-    db.session.commit()
-
-    return jsonify({"message": f"Advanced to Round {game.current_round}"}), 200
-
-
 @game_bp.route('/game/<int:game_id>/submit_associations', methods=['POST'])
 @jwt_required()
 def handle_submit_associations(game_id):
