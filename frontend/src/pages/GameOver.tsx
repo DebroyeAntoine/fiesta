@@ -24,6 +24,7 @@ const GameOverPage: React.FC = () => {
     const [score, setScore] = useState<number | null>(null);
     const [isOwner, setIsOwner] = useState<boolean>(false);
     const [gameResultReceived, setGameResultReceived] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     const handleCharacterSelect = (index: number, character: string) => {
         const newSelections = [...selectedCharacters];
@@ -75,8 +76,12 @@ const GameOverPage: React.FC = () => {
 
     useEffect(() => {
         if (socket) {
-            const handleGameResult = (data: { score: number }) => {
+            const handleGameResult = (data: {
+                score: number;
+                result: boolean;
+            }) => {
                 setScore(data.score);
+                setSuccess(data.result);
                 setGameResultReceived(true);
                 setWaiting(false); // Always set waiting to false when game result is received
             };
@@ -109,7 +114,12 @@ const GameOverPage: React.FC = () => {
             )}
 
             {score != null ? (
-                <ScoreDisplay score={score} isOwner={isOwner} />
+                <ScoreDisplay
+                    score={score}
+                    isOwner={isOwner}
+                    result={success}
+                    game_id={game_id}
+                />
             ) : (
                 <>
                     <div className="skull-word-cards grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">

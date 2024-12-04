@@ -79,6 +79,38 @@ def create_game(data):
         return jsonify({"error": "Failed to create game"}), 500
 
 
+@game_bp.route('/game/<int:game_id>/remake', methods=['POST'])
+@jwt_required()
+def remake_game(game_id):
+    player_id = get_jwt_identity()
+    try:
+        data = request.get_json()
+        result = data["result"]
+        print(result)
+        game = Game.query.get(game_id)
+
+        new_game = Game(owner_id=player_id, status='waiting')
+        constraints = game.get_constraints()
+        if(result):
+            constraints.append("Lettre P")
+        if(constraints):
+            new_game.set_constraints(constraints)
+        db.session.add(new_game)
+        db.session.commit()
+        new_round = Round(game_id=new_game.id, number=1)
+        db.session.add(new_round)
+
+        player = Player(user_id=player_id, game_id=new_game.id)
+        db.session.add(player)
+        db.session.commit()
+        return jsonify({'game_id': new_game.id}), 201
+
+
+    except Exception as e:
+        print(f"Error creating game: {e}")
+        return jsonify({"error": "Failed to create game"}), 500
+
+
 @game_bp.route('/game/get_games', methods=['GET'])
 @jwt_required()
 def get_games():
@@ -91,22 +123,6 @@ def get_games():
         'status': game.status
     } for game in games]
     return jsonify({'games': games_list}), 201
-
-@game_bp.route('/game/<int:game_id>/join', methods=['POST'])
-@jwt_required()
-def join_game(game_id):
-    player_id = get_jwt_identity()
-
-    game = Game.query.filter_by(id=game_id, status='waiting').first()
-    if not game:
-        return jsonify({"error": "Game not available or already in progress"}), 404
-
-    player = Player(user_id=player_id, game_id=game_id)
-    db.session.add(player)
-    db.session.commit()
-
-    join_room(f"game_{game.id}")
-    return jsonify({"message": "Successfully joined game", "game_id": game_id}), 200
 
 @game_bp.route('/game/<int:game_id>/start', methods=['POST'])
 @jwt_required()
@@ -468,4 +484,4 @@ def calculate_scores_and_notify(game_id):
     scores_dict = {player_id: score or 0 for player_id, score in player_scores}
     score = sum(scores_dict.values()) >= score_to_do
 
-    socketio.emit('game_result', {'result': "success" if score else "fail", 'score': sum(scores_dict.values())}, room=f'game_{game_id}')
+    socketio.emit('game_result', {'result': True if score else False, 'score': sum(scores_dict.values())}, room=f'game_{game_id}')
