@@ -4,6 +4,7 @@ from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, Playe
 from app.utils.character_loader import load_characters_from_file
 from app.socket import socketio
 from flask_socketio import emit, join_room, leave_room
+from app.utils.decorator import exception_handler
 import random
 from sqlalchemy.sql import func
 from sqlalchemy.types import  Integer
@@ -22,6 +23,7 @@ def home():
 
 
 @auth_bp.route('/register', methods=['POST'])
+@exception_handler
 def register():
     data = request.get_json()
     username = data.get('username')
@@ -42,6 +44,7 @@ def register():
     return jsonify({"message": "User created successfully."}), 201
 
 @auth_bp.route('/delete', methods=['DELETE'])
+@exception_handler
 def delete_all():
     print("delete")
     try:
@@ -54,10 +57,12 @@ def delete_all():
 
 
 @socketio.on('create_game')
+@exception_handler
 def create_game(data):
     try:
         player_id = decode_token(data.get('token'))['sub']
 
+        #FIXME player id instead user id
         new_game = Game(owner_id=player_id, status='waiting')
         constraints = new_game.get_constraints()
         constraints.append("Lettre P")
@@ -80,6 +85,7 @@ def create_game(data):
 
 
 @game_bp.route('/game/<int:game_id>/remake', methods=['POST'])
+@exception_handler
 @jwt_required()
 def remake_game(game_id):
     player_id = get_jwt_identity()
@@ -112,6 +118,7 @@ def remake_game(game_id):
 
 
 @game_bp.route('/game/get_games', methods=['GET'])
+@exception_handler
 @jwt_required()
 def get_games():
     games = Game.query.filter_by(status='waiting').all()
@@ -125,6 +132,7 @@ def get_games():
     return jsonify({'games': games_list}), 201
 
 @game_bp.route('/game/<int:game_id>/start', methods=['POST'])
+@exception_handler
 @jwt_required()
 def start_game(game_id):
     player_id = get_jwt_identity()
@@ -139,6 +147,7 @@ def start_game(game_id):
 
 # WebSocket event when a user joins a game room
 @socketio.on('join_game')
+@exception_handler
 def on_join_game(data):
     game_id = data['game_id']
     user_id = decode_token(data.get('token'))['sub']
@@ -162,6 +171,7 @@ def update_player_list(game_id):
     socketio.emit('players_update', {'players': game_players}, room=f"game_{game_id}")
 
 @game_bp.route('/game/<int:game_id>/get_lobby', methods=['GET'])
+@exception_handler
 @jwt_required()
 def get_lobby(game_id):
     game = Game.query.get(game_id)
@@ -179,6 +189,7 @@ def get_lobby(game_id):
 
 # WebSocket event when a user leaves a game room
 @socketio.on('leave_game')
+@exception_handler
 def on_leave_game(data):
     game_id = data['game_id']
     game = Game.query.get(game_id)
@@ -206,6 +217,7 @@ def on_leave_game(data):
 
 
 @auth_bp.route('/login', methods=['POST'])
+@exception_handler
 def login():
     data = request.get_json()
     username = data.get('username')
@@ -220,6 +232,7 @@ def login():
 
 
 @game_bp.route('/game/submit_word', methods=['POST'])
+@exception_handler
 @jwt_required()
 def submit_word():
     user_id = get_jwt_identity()
@@ -325,6 +338,7 @@ def broadcast_player_list(game_id):
         print(e)
 
 @game_bp.route('/game/<int:game_id>/players', methods=['GET'])
+@exception_handler
 @jwt_required()
 def get_players(game_id):
     players = Player.query.filter_by(game_id=game_id).all()
@@ -346,6 +360,7 @@ def get_players(game_id):
 
 
 @game_bp.route('/game/<int:game_id>/get_game_infos', methods=['GET'])
+@exception_handler
 @jwt_required()
 def get_info(game_id):
     current_player_id = get_jwt_identity()
@@ -369,6 +384,7 @@ def get_info(game_id):
     return jsonify({"players": player_data, "round_id": current_round.id, "player_id": current_player.id, "constraints": constraints})
 
 @game_bp.route('/game/<int:game_id>/current_round', methods=['GET'])
+@exception_handler
 @jwt_required()
 def get_current_round(game_id):
     current_player_id = get_jwt_identity()
@@ -403,6 +419,7 @@ def get_current_round(game_id):
     })
 
 @game_bp.route('/game/<int:game_id>/submit_associations', methods=['POST'])
+@exception_handler
 @jwt_required()
 def handle_submit_associations(game_id):
     player_id = get_jwt_identity()
