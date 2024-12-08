@@ -66,9 +66,6 @@ def create_game(data):
 
         #FIXME player id instead user id
         new_game = Game(owner_id=player_id, status='waiting')
-        constraints = new_game.get_constraints()
-        constraints.append("Lettre P")
-        new_game.set_constraints(constraints)
         db.session.add(new_game)
         db.session.commit()
         new_round = Round(game_id=new_game.id, number=1)
@@ -86,6 +83,16 @@ def create_game(data):
         return jsonify({"error": "Failed to create game"}), 500
 
 
+def randomize_constraints(length):
+    constraints = []
+    while len(constraints) < length:
+        constraint = random.choice(constraints_table)
+        if constraint not in constraints:
+            constraints.append(constraint)
+    return constraints
+
+
+
 @game_bp.route('/game/<int:game_id>/remake', methods=['POST'])
 @exception_handler
 @jwt_required()
@@ -100,7 +107,9 @@ def remake_game(game_id):
         new_game = Game(owner_id=player_id, status='waiting')
         constraints = game.get_constraints()
         if(result):
-            constraints.append("Lettre P")
+            constraints = randomize_constraints(len(constraints) + 1)
+        else :
+            constraints = randomize_constraints(len(constraints))
         if(constraints):
             new_game.set_constraints(constraints)
         db.session.add(new_game)
