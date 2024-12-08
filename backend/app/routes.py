@@ -1,7 +1,7 @@
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, decode_token
 from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation, WordEvolution
-from app.utils.character_loader import load_characters_from_file
+from app.utils.loader import load_from_file
 from app.socket import socketio
 from flask_socketio import emit, join_room, leave_room
 from app.utils.decorator import exception_handler
@@ -11,7 +11,9 @@ from sqlalchemy.types import  Integer
 from sqlalchemy.orm import  aliased
 
 CHARACTERS_FILE_PATH = 'app/utils/characters.txt'
-characters = load_characters_from_file(CHARACTERS_FILE_PATH)
+characters = load_from_file(CHARACTERS_FILE_PATH)
+CONSTRAINTS_FILE_PATH = 'app/utils/constraints.txt'
+constraints_table = load_from_file(CONSTRAINTS_FILE_PATH)
 bp = Blueprint("api", __name__)
 auth_bp = Blueprint('auth', __name__)
 game_bp = Blueprint('game', __name__)
