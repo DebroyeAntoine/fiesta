@@ -40,10 +40,11 @@ def register():
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     new_user = User(username=username, password=hashed_password)
+    access_token = create_access_token(identity=new_user.id)
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({"message": "User created successfully."}), 201
+    return jsonify({"message": "User created successfully.", 'token': access_token}), 200
 
 @auth_bp.route('/delete', methods=['DELETE'])
 @exception_handler
