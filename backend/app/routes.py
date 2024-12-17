@@ -40,9 +40,9 @@ def register():
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     new_user = User(username=username, password=hashed_password)
-    access_token = create_access_token(identity=new_user.id)
     db.session.add(new_user)
     db.session.commit()
+    access_token = create_access_token(identity=new_user.id)
 
     return jsonify({"message": "User created successfully.", 'token': access_token}), 200
 
@@ -121,6 +121,7 @@ def remake_game(game_id):
         player = Player(user_id=player_id, game_id=new_game.id)
         db.session.add(player)
         db.session.commit()
+        socketio.emit('new_game', {'game_id': new_game.id}, room=f"game_{game_id}")
         return jsonify({'game_id': new_game.id}), 201
 
 
@@ -163,14 +164,16 @@ def start_game(game_id):
 def on_join_game(data):
     game_id = data['game_id']
     user_id = decode_token(data.get('token'))['sub']
+    existing_player = Player.query.filter_by(game_id=game_id, user_id=user_id).first()
     username = User.query.filter_by(id = user_id).first().username
-    player = Player(user_id=user_id, game_id=game_id)
-    db.session.add(player)
-    db.session.commit()
+    if (not existing_player):
+        player = Player(user_id=user_id, game_id=game_id)
+        db.session.add(player)
+        db.session.commit()
+
+        update_player_list(game_id)
+
     join_room(f"game_{game_id}")
-
-    update_player_list(game_id)
-
     emit('player_joined', {'player': username}, room=f"game_{game_id}")
 
 

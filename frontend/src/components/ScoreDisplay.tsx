@@ -1,11 +1,15 @@
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../context/SocketContext";
 
 interface ScoreDisplayProps {
     score: number;
     isOwner: boolean;
     result: boolean;
     game_id: number;
+}
+interface Game {
+    game_id: string;
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -14,7 +18,16 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     result,
     game_id,
 }) => {
+    const socket = useSocket();
     const navigate = useNavigate();
+
+    const leaveGame = useCallback(() => {
+        const token = localStorage.getItem("token");
+        socket.emit("leave_game", {
+            game_id: game_id,
+            player_token: token,
+        });
+    }, [socket, game_id]);
     const handleCreateNewGame = async () => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -33,10 +46,33 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             });
             if (response.ok) {
                 const data = await response.json();
-                navigate(`/game/${data.game_id}`);
+                navigate(`/game/${data.game_id}/lobby`);
             }
         } catch (error) {}
     };
+    useEffect(() => {
+        const socketListeners = {
+            new_game: (data: Game) => {
+                console.log(data);
+                socket.emit("join_game", {
+                    token: localStorage.getItem("token"),
+                    game_id: data.game_id,
+                });
+                navigate(`/game/${data.game_id}/lobby`);
+            },
+        };
+        Object.entries(socketListeners).forEach(([event, handler]) => {
+            socket.on(event, handler);
+        });
+
+        return () => {
+            Object.entries(socketListeners).forEach(([event, handler]) => {
+                socket.off(event, handler);
+            });
+
+            leaveGame();
+        };
+    }, [socket, leaveGame, navigate]);
     return (
         <div className="score-section text-center text-black">
             <h2 className="text-3xl mb-6">Votre Score Final :</h2>
