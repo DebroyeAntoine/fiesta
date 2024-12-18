@@ -34,7 +34,7 @@ class Round(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
     number = db.Column(db.Integer, nullable=False)
-    player_rounds = db.relationship('PlayerRound', backref='round', lazy=True)
+    player_rounds = db.relationship('PlayerRound', backref='round', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Round {self.number} in Game {self.game_id}>"
@@ -42,7 +42,7 @@ class Round(db.Model):
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     players = db.relationship('Player', backref='game', lazy=True,foreign_keys='Player.game_id')
-    rounds = db.relationship('Round', backref='game', lazy=True)
+    rounds = db.relationship('Round', backref='game', lazy=True, cascade='all, delete-orphan')
     current_round = db.Column(db.Integer, default=1)
     owner_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     owner = db.relationship(
@@ -70,7 +70,7 @@ class Player(db.Model):
     @property
     def username(self):
         return User.query.get(self.user_id).username
-    player_rounds = db.relationship('PlayerRound', backref='player', lazy=True)
+    player_rounds = db.relationship('PlayerRound', backref='player', lazy=True, cascade='all, delete-orphan')
     def __repr__(self):
         return f'<Player {self.user.username} playing as {self.id} with user {self.user_id}>'
 
