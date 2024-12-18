@@ -129,6 +129,12 @@ def remake_game(game_id):
         print(f"Error creating game: {e}")
         return jsonify({"error": "Failed to create game"}), 500
 
+@game_bp.route('/game/<int:game_id>/quit', methods=['POST'])
+@exception_handler
+@jwt_required()
+def quit_game(game_id):
+    socketio.emit('go_to_menu', room=f"game_{game_id}")
+    return jsonify({'message': "success"}), 201
 
 @game_bp.route('/game/get_games', methods=['GET'])
 @exception_handler

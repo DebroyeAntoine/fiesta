@@ -28,6 +28,27 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             player_token: token,
         });
     }, [socket, game_id]);
+    const handleQuit = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("No JWT token found");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/game/${game_id}/quit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ result: result }),
+            });
+            if (response.ok) {
+                navigate(`/gameList`);
+            }
+        } catch (error) {}
+    };
     const handleCreateNewGame = async () => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -60,6 +81,9 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 });
                 navigate(`/game/${data.game_id}/lobby`);
             },
+            go_to_menu: () => {
+                navigate("/gameList");
+            },
         };
         Object.entries(socketListeners).forEach(([event, handler]) => {
             socket.on(event, handler);
@@ -81,7 +105,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 <div className="flex gap-4">
                     <button
                         onClick={() => {
-                            console.log("coucou");
+                            handleQuit();
                         }}
                         className="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200"
                     >
