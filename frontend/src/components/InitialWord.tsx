@@ -14,13 +14,16 @@ const InitialWordDisplay: React.FC<InitialWordDisplayProps> = ({
     useEffect(() => {
         const fetchInitialWord = async () => {
             try {
-                const response = await fetch(`/game/${gameId}/current_round`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                });
+                const response = await fetch(
+                    `/game_api/game/${gameId}/current_round`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                    }
+                );
 
                 if (response.ok) {
                     const data = await response.json();

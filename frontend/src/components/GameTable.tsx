@@ -39,7 +39,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
         if (playerId === null) return;
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`/game/submit_word`, {
+            const response = await fetch(`/game_api/game/submit_word`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -63,13 +63,16 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
     useEffect(() => {
         const fetchGameInfo = async () => {
             const token = localStorage.getItem("token");
-            const response = await fetch(`/game/${gameId}/get_game_infos`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await fetch(
+                `/game_api/game/${gameId}/get_game_infos`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             if (response.ok) {
                 const data = await response.json();

@@ -45,7 +45,7 @@ const Lobby: React.FC = () => {
     const fetchLobbyInfo = useCallback(async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`/game/${gameId}/get_lobby`, {
+            const response = await fetch(`/game_api/game/${gameId}/get_lobby`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -66,7 +66,7 @@ const Lobby: React.FC = () => {
     const handleStartGame = useCallback(async () => {
         const token = localStorage.getItem("token");
         try {
-            const response = await fetch(`/game/${gameId}/start`, {
+            const response = await fetch(`/game_api/game/${gameId}/start`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

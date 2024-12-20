@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const Register: React.FC = () => {
     const navigate = useNavigate();
     const handleRegister = async (username: string, password: string) => {
-        const response = await fetch("/register", {
+        const response = await fetch("/auth_api/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

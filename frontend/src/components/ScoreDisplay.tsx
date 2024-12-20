@@ -36,7 +36,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
 
         try {
-            const response = await fetch(`/game/${game_id}/quit`, {
+            const response = await fetch(`/game_api/game/${game_id}/quit`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -57,7 +57,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
 
         try {
-            const response = await fetch(`/game/${game_id}/remake`, {
+            const response = await fetch(`/game_api/game/${game_id}/remake`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

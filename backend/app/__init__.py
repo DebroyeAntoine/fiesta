@@ -17,8 +17,8 @@ def create_app():
     db.init_app(app)
 
     # Register blueprints
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(game_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth_api')
+    app.register_blueprint(game_bp, url_prefix='/game_api')
     app.register_blueprint(bp)
 
     # Create the database tables

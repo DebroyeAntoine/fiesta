@@ -42,7 +42,7 @@ const GameOverPage: React.FC = () => {
 
         try {
             const response = await fetch(
-                `/game/${game_id}/submit_associations`,
+                `/game_api/game/${game_id}/submit_associations`,
                 {
                     method: "POST",
                     headers: {
