@@ -5,7 +5,7 @@ import { io, Socket } from 'socket.io-client';
 const SocketContext = createContext<Socket | null>(null);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const socket = io('http://localhost:5000', { transports: ['websocket'] });
+  const socket = io('/', { transports: ['websocket'] });
 
   useEffect(() => {
     return () => {

@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - fiesta-network
+
+  backend:
+    build:
+      context: ./backend
+    expose:
+      - "5000"
+    networks:
+      - fiesta-network
+
+networks:
+  fiesta-network:
+    driver: bridge
+
+
