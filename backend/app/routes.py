@@ -276,7 +276,30 @@ def submit_word():
         if word_evolution:
             word_evolution.word = word
         else:
-            word_evolution = WordEvolution(game_id=game_id, player_id=current_player_id, round_id=round_id, word=word)
+            previous_player_round = PlayerRound.query.filter_by(
+                round_id=round_id - 1,  # Tour précédent
+                word_submitted=word     # Mot soumis par un autre joueur
+            ).first()
+
+            previous_character = None
+            if previous_player_round:
+                # Utiliser le joueur précédent pour récupérer son `WordEvolution`
+                previous_word_evolution = WordEvolution.query.filter_by(
+                    game_id=game_id,
+                    player_id=previous_player_round.player_id,
+                    round_id=round_id - 1
+                ).first()
+                if previous_word_evolution:
+                    previous_character = previous_word_evolution.character
+
+            # Créer la nouvelle instance de WordEvolution
+            word_evolution = WordEvolution(
+                game_id=game_id,
+                player_id=current_player_id,
+                round_id=round_id,
+                word=word,
+                character=previous_character  # Conserver le character initial
+            )
             db.session.add(word_evolution)
         db.session.commit()
 
@@ -443,62 +466,75 @@ def get_current_round(game_id):
 @exception_handler
 @jwt_required()
 def handle_submit_associations(game_id):
+    """
+    Handle the submission of player associations between final words and initial characters.
+    Each final word (skull_word) should be matched with its original character from round 1,
+    tracked through WordEvolution.
+    """
     player_id = get_jwt_identity()
     data = request.get_json()
     associations = data['associations']
+
     game = Game.query.get(game_id)
     if not game:
         return jsonify({"error": "Game not found"}), 404
     is_owner = game.owner_id == player_id
 
-    for association in associations:
-        skull_word = association['skull_word']
-        selected_character = association['selected_character']
-
-        word_round_4 = aliased(WordEvolution)
-        word_round_1 = aliased(WordEvolution)
-
-        round_4 = Round.query.filter_by(game_id=game_id, number=4).first()
+    try:
+        # Get rounds 1 and 4
         round_1 = Round.query.filter_by(game_id=game_id, number=1).first()
+        round_4 = Round.query.filter_by(game_id=game_id, number=4).first()
 
-        if round_4 is None or round_1 is None:
-            print(f"Erreur : Round 4 ou Round 1 non trouvé pour le jeu {game_id}")
-            continue
+        if not round_1 or not round_4:
+            return jsonify({"error": "Required rounds not found"}), 400
 
-        # Find the initial character for the skull card
-        initial_evolution = db.session.query(word_round_1.character).select_from(word_round_1).join(
-            word_round_4,
-            (word_round_4.word == skull_word) &
-            (word_round_4.round_id == round_4.id) &
-            (word_round_4.game_id == game_id) &
-            (word_round_4.player_id == word_round_1.player_id)
-        ).filter(
-            word_round_1.round_id == round_1.id,
-            word_round_1.game_id == game_id
-        ).first()
-        if initial_evolution is None:
-            print(f"Erreur : Aucun mot initial trouvé pour le skull_word {skull_word} du joueur {player_id}")
-            continue
+        # Process each association
+        for association in associations:
+            skull_word = association['skull_word']  # The final word from round 4
+            selected_character = association['selected_character']  # The player's guess
 
-        initial_character = initial_evolution[0]
-        is_correct = initial_character == selected_character
+            # Find the WordEvolution entry for this final word
+            final_word_evolution = WordEvolution.query.filter_by(
+                game_id=game_id,
+                round_id=round_4.id,
+                word=skull_word
+            ).first()
 
-        new_association = PlayerAssociation(
-            game_id=game_id,
-            player_id=player_id,
-            skull_word=skull_word,
-            selected_character=selected_character,
-            is_correct=is_correct
-        )
-        db.session.add(new_association)
+            if not final_word_evolution:
+                continue
 
-    db.session.commit()
-    all_submitted = check_all_players_submitted(game_id)
+            # Get the character associated with this word evolution chain
+            original_character = final_word_evolution.character
 
-    if all_submitted:
-        calculate_scores_and_notify(game_id)
+            if not original_character:
+                continue
 
-    return jsonify({"message": "Associations submitted successfully", "isOwner": is_owner}), 200
+            # Create association record
+            new_association = PlayerAssociation(
+                game_id=game_id,
+                player_id=player_id,
+                skull_word=skull_word,
+                selected_character=selected_character,
+                is_correct=(original_character.lower() == selected_character.lower())
+            )
+            db.session.add(new_association)
+
+        db.session.commit()
+
+        # Check if all players have submitted
+        all_submitted = check_all_players_submitted(game_id)
+
+        if all_submitted:
+            calculate_scores_and_notify(game_id)
+
+        return jsonify({
+            "message": "Associations submitted successfully",
+            "isOwner": is_owner
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 def check_all_players_submitted(game_id):
     game = Game.query.get(game_id)
