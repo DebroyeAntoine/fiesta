@@ -256,71 +256,112 @@ def login():
 @exception_handler
 @jwt_required()
 def submit_word():
-    user_id = get_jwt_identity()
-    data = request.get_json()
-    word = data.get('word')
-    round_id = data.get('round_id')
-    game_id = data.get('game_id')
-    current_player_id = Player.query.filter_by(user_id=user_id, game_id=game_id).first().id
+   user_id = get_jwt_identity()
+   data = request.get_json()
+   word = data.get('word')
+   round_id = data.get('round_id')
+   game_id = data.get('game_id')
 
-    player_round = PlayerRound.query.filter_by(player_id=current_player_id, round_id=round_id).first()
+   # Get current player
+   current_player = Player.query.filter_by(user_id=user_id, game_id=game_id).first()
+   if not current_player:
+       return jsonify({"error": "Player not found"}), 404
 
-    if player_round:
-        player_round.word_submitted = word
-        word_evolution = WordEvolution.query.filter_by(
-            game_id=game_id,
-            player_id=current_player_id,
-            round_id=round_id
-        ).first()
+   # Get the current round and verify it exists
+   current_round = Round.query.get(round_id)
+   if not current_round:
+       return jsonify({"error": "Round not found"}), 404
 
-        if word_evolution:
-            word_evolution.word = word
-        else:
-            previous_player_round = PlayerRound.query.filter_by(
-                round_id=round_id - 1,  # Tour précédent
-                word_submitted=word     # Mot soumis par un autre joueur
-            ).first()
+   # Get/Create PlayerRound
+   player_round = PlayerRound.query.filter_by(
+       player_id=current_player.id,
+       round_id=round_id
+   ).first()
 
-            previous_character = None
-            if previous_player_round:
-                # Utiliser le joueur précédent pour récupérer son `WordEvolution`
-                previous_word_evolution = WordEvolution.query.filter_by(
-                    game_id=game_id,
-                    player_id=previous_player_round.player_id,
-                    round_id=round_id - 1
-                ).first()
-                if previous_word_evolution:
-                    previous_character = previous_word_evolution.character
+   if not player_round:
+       return jsonify({"error": "PlayerRound not found"}), 404
 
-            # Créer la nouvelle instance de WordEvolution
-            word_evolution = WordEvolution(
-                game_id=game_id,
-                player_id=current_player_id,
-                round_id=round_id,
-                word=word,
-                character=previous_character  # Conserver le character initial
-            )
-            db.session.add(word_evolution)
-        db.session.commit()
+   # Update the submitted word
+   player_round.word_submitted = word
 
-        socketio.emit('word_submitted', {'player_id': current_player_id})
+   # Handle WordEvolution
+   word_evolution = WordEvolution.query.filter_by(
+       game_id=game_id,
+       player_id=current_player.id,
+       round_id=round_id
+   ).first()
 
-        submitted_count = PlayerRound.query.filter_by(round_id=round_id).filter(PlayerRound.word_submitted.isnot(None)).count()
+   if word_evolution:
+       # If WordEvolution exists, just update the word
+       word_evolution.word = word
+   else:
+       # If it doesn't exist, we need to create it with the right character
+       if current_round.number == 1:
+           # For round 1, the character is the initial word
+           character = word
+       else:
+           # For other rounds, get the character from previous player's WordEvolution
+           # Get ordered list of players
+           players = Player.query.filter_by(game_id=game_id).order_by(Player.id).all()
+           player_count = len(players)
 
-        total_players_count = Player.query.filter_by(game_id=game_id).count()
+           # Find current player's position
+           current_player_index = next(i for i, p in enumerate(players) if p.id == current_player.id)
+           # Get previous player in rotation
+           previous_player_index = (current_player_index - 1) % player_count
+           previous_player = players[previous_player_index]
 
-        all_submitted = submitted_count == total_players_count
+           # Get previous round
+           previous_round = Round.query.filter_by(
+               game_id=game_id,
+               number=current_round.number - 1
+           ).first()
 
-        if all_submitted:
-            current_round_number = Round.query.get(round_id).number
-            if current_round_number == 4:
-                emit_game_over(game_id)
-            else:
-                emit_new_round_event(round_id, game_id)
+           if previous_round:
+               # Get previous player's WordEvolution to get the character
+               previous_word_evolution = WordEvolution.query.filter_by(
+                   game_id=game_id,
+                   player_id=previous_player.id,
+                   round_id=previous_round.id
+               ).first()
 
-        return jsonify({"message": "Word submitted successfully!"}), 200
-    else:
-        return jsonify({"error": "PlayerRound not found!"}), 404
+               character = previous_word_evolution.character if previous_word_evolution else None
+           else:
+               character = None
+
+       # Create new WordEvolution
+       word_evolution = WordEvolution(
+           game_id=game_id,
+           player_id=current_player.id,
+           round_id=round_id,
+           word=word,
+           character=character
+       )
+       db.session.add(word_evolution)
+
+   # Commit all changes
+   db.session.commit()
+
+   # Notify clients that word was submitted
+   socketio.emit('word_submitted', {'player_id': current_player.id})
+
+   # Check if all players have submitted
+   submitted_count = PlayerRound.query.filter_by(
+       round_id=round_id
+   ).filter(
+       PlayerRound.word_submitted.isnot(None)
+   ).count()
+
+   total_players_count = Player.query.filter_by(game_id=game_id).count()
+   all_submitted = submitted_count == total_players_count
+
+   if all_submitted:
+       if current_round.number == 4:
+           emit_game_over(game_id)
+       else:
+           emit_new_round_event(round_id, game_id)
+
+   return jsonify({"message": "Word submitted successfully!"}), 200
 
 def emit_new_round_event(previous_round_id, game_id):
     players = Player.query.filter_by(game_id=game_id).order_by(Player.id).all()
