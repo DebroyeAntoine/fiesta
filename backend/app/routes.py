@@ -600,3 +600,34 @@ def calculate_scores_and_notify(game_id):
     score = sum(scores_dict.values()) >= score_to_do
 
     socketio.emit('game_result', {'result': True if score else False, 'score': sum(scores_dict.values())}, room=f'game_{game_id}')
+
+@game_bp.route('/game/<int:game_id>/word_evolution', methods=['GET'])
+@exception_handler
+@jwt_required()
+def get_word_evolution(game_id):
+    word_evolution = db.session.query(
+        WordEvolution.player_id,
+        WordEvolution.word,
+        Round.number.label('round_number'),
+        User.username
+    ).join(
+        Round, WordEvolution.round_id == Round.id
+    ).join(
+        Player, WordEvolution.player_id == Player.id
+    ).join(
+        User, Player.user_id == User.id
+    ).filter(
+        WordEvolution.game_id == game_id
+    ).order_by(
+        WordEvolution.player_id,
+        Round.number
+    ).all()
+
+    evolution_data = [{
+        'player_id': entry.player_id,
+        'username': entry.username,
+        'word': entry.word,
+        'round_number': entry.round_number
+    } for entry in word_evolution]
+
+    return jsonify({'word_evolution': evolution_data})

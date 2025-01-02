@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import SkullWordCard from "../components/SkullWordCard";
 import ScoreDisplay from "../components/ScoreDisplay";
+import WordEvolutionReveal from "../components/WordEvolution";
 import { useSocket } from "../context/SocketContext";
 
 const GameOverPage: React.FC = () => {
@@ -114,12 +115,15 @@ const GameOverPage: React.FC = () => {
             )}
 
             {score != null ? (
-                <ScoreDisplay
-                    score={score}
-                    isOwner={isOwner}
-                    result={success}
-                    game_id={game_id}
-                />
+                <>
+                    <WordEvolutionReveal game_id={game_id} />
+                    <ScoreDisplay
+                        score={score}
+                        isOwner={isOwner}
+                        result={success}
+                        game_id={game_id}
+                    />
+                </>
             ) : (
                 <>
                     <div className="skull-word-cards grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
