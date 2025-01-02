@@ -228,7 +228,9 @@ def on_leave_game(data):
             else:
                 round = Round.query.filter_by(game_id=game_id).first()
                 db.session.delete(round)
-                db.session.delete(game)
+                #FIXME handle properly the deletion of the game
+                game.status = "ended"
+                #db.session.delete(game)
                 db.session.commit()
 
         db.session.delete(player)
