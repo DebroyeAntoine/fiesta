@@ -631,7 +631,7 @@ def get_word_evolution(game_id):
         'word': entry.word,
         'round_number': entry.round_number
     } for entry in word_evolution]
-
+    return jsonify({'word_evolution': evolution_data})
 
 
 
