@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useSocket } from "../context/SocketContext";
 
 interface WordEvolutionProps {
     game_id: number;
+    isOwner: boolean;
 }
 
 interface WordEvolutionItem {

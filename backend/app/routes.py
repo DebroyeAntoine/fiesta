@@ -632,4 +632,18 @@ def get_word_evolution(game_id):
         'round_number': entry.round_number
     } for entry in word_evolution]
 
-    return jsonify({'word_evolution': evolution_data})
+
+
+
+@socketio.on('start_word_reveal')
+@exception_handler
+def handle_start_reveal(data):
+    game_id = data['game_id']
+    socketio.emit('reveal_next_step', 0, room=f"game_{game_id}")
+
+@socketio.on('advance_word_reveal')
+@exception_handler
+def handle_advance_reveal(data):
+    game_id = data['game_id']
+    step = data['step']
+    socketio.emit('reveal_next_step', step, room=f"game_{game_id}")
