@@ -3,7 +3,7 @@ import { useSocket } from "../context/SocketContext";
 
 interface WordEvolutionProps {
     game_id: number;
-    isOwner: boolean;
+//    isOwner: boolean;
 }
 
 interface WordEvolutionItem {
