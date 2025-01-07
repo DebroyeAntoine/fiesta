@@ -610,6 +610,7 @@ def get_word_evolution(game_id):
     word_evolution = db.session.query(
         WordEvolution.player_id,
         WordEvolution.word,
+        WordEvolution.character,
         Round.number.label('round_number'),
         User.username
     ).join(
@@ -629,8 +630,10 @@ def get_word_evolution(game_id):
         'player_id': entry.player_id,
         'username': entry.username,
         'word': entry.word,
+        'character': entry.character,  # Ajout du character
         'round_number': entry.round_number
     } for entry in word_evolution]
+
     return jsonify({'word_evolution': evolution_data})
 
 
