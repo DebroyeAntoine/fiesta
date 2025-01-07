@@ -41,38 +41,43 @@ const WordEvolutionChain: React.FC<WordEvolutionProps> = ({ game_id }) => {
             if (response.ok) {
                 const data = await response.json();
 
-                // Organiser les données par chaîne d'évolution
-                const chainsMap = new Map<string, ChainData>();
+                // Group evolution items by character
+                const evolutionsByCharacter = new Map<
+                    string,
+                    WordEvolutionItem[]
+                >();
 
                 data.word_evolution.forEach((item: WordEvolutionItem) => {
-                    if (item.round_number === 1) {
-                        // C'est un mot initial, donc le début d'une nouvelle chaîne
-                        chainsMap.set(item.word, {
-                            initialCharacter:
-                                item.character || "Personnage inconnu",
-                            steps: [
-                                {
-                                    username: item.username,
-                                    word: item.word,
-                                    roundNumber: item.round_number,
-                                },
-                            ],
-                        });
-                    } else {
-                        // Convertir les valeurs de la Map en tableau pour l'itération
-                        Array.from(chainsMap.values()).forEach((chain) => {
-                            if (chain.steps.length === item.round_number - 1) {
-                                chain.steps.push({
-                                    username: item.username,
-                                    word: item.word,
-                                    roundNumber: item.round_number,
-                                });
-                            }
+                    const character = item.character || "Personnage inconnu";
+                    if (!evolutionsByCharacter.has(character)) {
+                        evolutionsByCharacter.set(character, []);
+                    }
+                    evolutionsByCharacter.get(character)?.push(item);
+                });
+
+                // Convert grouped data into chains
+                const processedChains: ChainData[] = [];
+
+                evolutionsByCharacter.forEach((items, character) => {
+                    // Sort items by round number to ensure correct order
+                    const sortedItems = items.sort(
+                        (a, b) => a.round_number - b.round_number
+                    );
+
+                    // Only process complete chains (4 steps)
+                    if (sortedItems.length === 4) {
+                        processedChains.push({
+                            initialCharacter: character,
+                            steps: sortedItems.map((item) => ({
+                                username: item.username,
+                                word: item.word,
+                                roundNumber: item.round_number,
+                            })),
                         });
                     }
                 });
 
-                setChains(Array.from(chainsMap.values()));
+                setChains(processedChains);
             }
         };
         fetchEvolutionData();
