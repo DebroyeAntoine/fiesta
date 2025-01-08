@@ -37,6 +37,7 @@ const SkullCardInput: React.FC<SkullCardInputProps> = ({
                 />
             </div>
             <button
+                type="submit"
                 onClick={handleClick}
                 disabled={isButtonDisabled}
                 className={`mt-4 py-2 px-4 rounded transition duration-300 ease-in-out ${
