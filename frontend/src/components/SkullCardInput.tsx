@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SkullCardBase from './SkullCardBase';
 
 interface SkullCardInputProps {
   word: string;
   setWord: (value: string) => void;
   handleValidate: () => void;
+  isNewRound: boolean;
 }
 
-const SkullCardInput: React.FC<SkullCardInputProps> = ({ word, setWord, handleValidate }) => {
+const SkullCardInput: React.FC<SkullCardInputProps> = ({ word, setWord, handleValidate, isNewRound }) => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const handleClick = () => {
     setIsButtonDisabled(true);
     handleValidate();
   };
+
+  useEffect(() => {
+    setIsButtonDisabled(false);
+  }, [isNewRound]);
 
   return (
     <SkullCardBase>

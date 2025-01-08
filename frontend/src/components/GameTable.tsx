@@ -206,6 +206,7 @@ const GameTable: React.FC<GameTableProps> = ({ gameId }) => {
                             word={word}
                             setWord={setWord}
                             handleValidate={handleValidate}
+                            isNewRound={newRound}
                         />
                     </div>
                 )}
