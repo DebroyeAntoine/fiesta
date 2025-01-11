@@ -1,0 +1,42 @@
+database:
+  url: "sqlite:///dev.db"
+  pool_size: 5
+  max_overflow: 10
+  echo: true
+
+security:
+  jwt_secret: "test_secret_jwt"
+  jwt_access_expires: 900  # 15 minutes
+  jwt_refresh_expires: 604800  # 7 days
+  allowed_origins: 
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+  password_min_length: 8
+  rate_limit_default: "1000 per day"
+  rate_limit_login: "5 per minute"
+
+websocket:
+  ping_timeout: 20
+  ping_interval: 25
+  max_clients: 1000
+
+    ## config/production.yaml
+    #database:
+    #  url: "postgresql://user:pass@localhost:5432/dbname"
+    #  pool_size: 20
+    #  max_overflow: 30
+    #  echo: false
+    #
+    #security:
+    #  jwt_access_expires: 900
+    #  jwt_refresh_expires: 604800
+    #  allowed_origins: 
+    #    - "https://your-domain.com"
+    #  password_min_length: 12
+    #  rate_limit_default: "200 per day"
+    #  rate_limit_login: "5 per minute"
+    #
+    #websocket:
+    #  ping_timeout: 20
+    #  ping_interval: 25
+    #  max_clients: 5000

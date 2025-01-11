@@ -4,7 +4,6 @@ from flask_jwt_extended import JWTManager
 from app.socket import socketio
 
 app = create_app()
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key_here'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=15)
 jwt = JWTManager(app)
 

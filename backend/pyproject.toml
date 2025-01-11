@@ -15,6 +15,7 @@ pyjwt = "^2.9.0"
 flask-jwt-extended = "^4.6.0"
 flask-socketio = "^5.4.1"
 eventlet = "^0.37.0"
+pyyaml = "^6.0.2"
 
 
 [build-system]
