@@ -13,6 +13,13 @@ class User(db.Model):
 
     # Games where the user is in
     games = db.relationship('Player', backref='user', lazy=True)
+    rooms = db.Column(db.Text, nullable=True, default='[]')
+
+    def get_rooms(self):
+        return json.loads(self.rooms) if self.rooms else []
+
+    def set_rooms(self, value):
+        self.rooms = json.dumps(value)
 
     def __repr__(self):
         return f'<User {self.username}>'

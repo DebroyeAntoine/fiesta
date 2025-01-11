@@ -108,8 +108,6 @@ const Lobby: React.FC = () => {
                 isRedirecting.current = true;
                 navigate(`/game/${gameId}`);
             },
-            game_info: (data: GameInfoData) =>
-                setIsOwner(data.owner_id === socket.id),
         };
 
         Object.entries(socketListeners).forEach(([event, handler]) => {

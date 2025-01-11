@@ -77,6 +77,12 @@ def create_game(data):
         db.session.commit()
 
         join_room(f"game_{new_game.id}")
+        user = User.query.get(player_id)
+        rooms = user.get_rooms()
+        rooms.append(f"game_{new_game.id}")
+        user.set_rooms(rooms)
+
+        db.session.commit()
         emit('game_created', {'game_id': new_game.id, 'success': True}, broadcast=True)
 
     except Exception as e:
@@ -180,6 +186,11 @@ def on_join_game(data):
         update_player_list(game_id)
 
     join_room(f"game_{game_id}")
+    user = User.query.get(user_id)
+    user_rooms = user.get_rooms()
+    user_rooms.append(f"game_{game_id}")
+    user.set_rooms(user_rooms)
+    db.session.commit()
     emit('player_joined', {'player': username}, room=f"game_{game_id}")
 
 
@@ -216,6 +227,12 @@ def on_leave_game(data):
     game = Game.query.get(game_id)
     user_id = decode_token(data.get('player_token'))['sub']
     player = Player.query.filter_by(game_id=game_id, user_id=user_id).first()
+    user = User.query.get(user_id)
+    user_rooms = user.get_rooms()
+    user_rooms.remove(f"game_{game_id}")
+    print(user_rooms)
+    user.set_rooms(user_rooms)
+    db.session.commit()
 
     if game and player:
         if game.owner_id == user_id:
@@ -650,3 +667,13 @@ def handle_advance_reveal(data):
     game_id = data['game_id']
     step = data['step']
     socketio.emit('reveal_next_step', step, room=f"game_{game_id}")
+
+@socketio.on('join_room')
+@exception_handler
+def on_join_room(data):
+    user_id = decode_token(data.get('token'))['sub']
+    print(user_id)
+    user = User.query.get(user_id)
+    rooms = user.get_rooms()
+    print(rooms)
+    [join_room(room) for room in rooms]
