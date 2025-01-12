@@ -29,3 +29,4 @@ wsproto==1.2.0 ; python_version >= "3.12" and python_version < "4.0"
 gevent-websocket==0.10.1
 gevent==23.9.1
 gunicorn==23.0.0 
+pyyaml ==6.0.2
