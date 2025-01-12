@@ -1,0 +1,41 @@
+name: Pylint Linting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    # Étape 3 : Installer Poetry
+    - name: Install Poetry
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+
+    # Étape 4 : Installer les dépendances avec Poetry
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        poetry install
+
+    # Étape 5 : Exécuter Pylint
+    - name: Run pylint
+      working-directory: ./backend
+      run: |
+        poetry run pylint **/*.py
+
