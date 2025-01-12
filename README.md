@@ -1,4 +1,6 @@
 # Fiesta de los Muertos SaaS
+![Build Status](https://github.com/DebroyeAntoine/fiesta/actions/workflows/pylint.yml/badge.svg)
+
 
 ## How to run it
 
