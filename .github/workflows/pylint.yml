@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       working-directory: ./backend
       run: |
-        poetry install
+        poetry install --no-root
 
     # Étape 5 : Exécuter Pylint
     - name: Run pylint
