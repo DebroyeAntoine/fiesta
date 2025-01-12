@@ -1,8 +1,8 @@
 # security/jwt.py
 from datetime import datetime, timedelta
 from typing import Optional, Dict
-import jwt
 from dataclasses import dataclass
+import jwt
 from app.config.config import SecurityConfig
 from app.exceptions import AuthenticationError
 
@@ -19,13 +19,17 @@ class JWTManager:
         if not config.jwt_secret:
             raise ValueError("JWT secret key is not configured")
 
-    def create_token_pair(self, user_id: int, additional_claims: Optional[Dict] = None) -> TokenPair:
+    def create_token_pair(self, user_id: int,
+                          additional_claims: Optional[Dict] = None
+                          ) -> TokenPair:
         """Create token access + refresh"""
         now = datetime.utcnow()
-        
+
         claims = additional_claims or {}
-        access_expires = now + timedelta(seconds=self.config.jwt_access_expires)
-        refresh_expires = now + timedelta(seconds=self.config.jwt_refresh_expires)
+        access_expires = now + timedelta(
+                seconds=self.config.jwt_access_expires)
+        refresh_expires = now + timedelta(
+                seconds=self.config.jwt_refresh_expires)
 
         access_token = jwt.encode(
             {
@@ -66,7 +70,7 @@ class JWTManager:
                 algorithms=['HS256']
             )
             return payload
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationError("Token has expired")
+        except jwt.ExpiredSignatureError as e:
+            raise AuthenticationError("Token has expired") from e
         except jwt.InvalidTokenError as e:
-            raise AuthenticationError(f"Invalid token: {str(e)}")
+            raise AuthenticationError(f"Invalid token: {str(e)}") from e

@@ -1,6 +1,7 @@
 # app/config/__init__.py
 
-from .config import AppConfig, Environment, DatabaseConfig, SecurityConfig, WebSocketConfig
+from .config import (AppConfig, Environment, DatabaseConfig, SecurityConfig,
+                     WebSocketConfig)
 
 __all__ = [
     "AppConfig",
@@ -9,4 +10,3 @@ __all__ = [
     "SecurityConfig",
     "WebSocketConfig",
 ]
-

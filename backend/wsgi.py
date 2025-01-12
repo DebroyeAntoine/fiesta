@@ -1,6 +1,4 @@
-import datetime
 from app import create_app
-from flask_jwt_extended import JWTManager
 from app.socket import socketio
 
 app = create_app()

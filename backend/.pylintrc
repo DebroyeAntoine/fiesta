@@ -1,0 +1,55 @@
+[MASTER]
+# Recherche des fichiers de configuration dans le répertoire courant
+init-hook='import sys; sys.path.append(".")'
+ignore=
+ignore-patterns=
+
+[MESSAGES CONTROL]
+# Désactiver aucun message
+disable=
+    missing-docstring,
+    missing-module-docstring,
+    missing-class-docstring,
+    broad-exception-caught,
+    too-few-public-methods
+
+[REPORTS]
+# Formater les rapports avec un résumé uniquement
+output-format=colorized
+reports=no
+
+[BASIC]
+# Conventions strictes de nommage conformes à la PEP 8
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+argument-rgx=[a-z_][a-z0-9_]{0,30}$
+attr-rgx=[a-z_][a-z0-9_]{0,30}$
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+function-rgx=[a-z_][a-z0-9_]{0,30}$
+method-rgx=[a-z_][a-z0-9_]{0,30}$
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+[FORMAT]
+# Largeur maximale des lignes (selon la PEP 8)
+max-line-length=79
+# Taille minimale pour considérer une fonction ou une méthode publique
+min-public-methods=1
+
+[TYPECHECK]
+# Activer toutes les vérifications de type
+ignore-mixin-members=no
+
+[DESIGN]
+# Limites strictes pour respecter des métriques classiques
+max-args=5
+max-locals=15
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=7
+max-attributes=10
+
+[SIMILARITIES]
+# Activer la détection des doublons
+ignore-comments=no
+ignore-docstrings=no
+ignore-imports=no

@@ -1,14 +1,16 @@
 from functools import wraps
 from flask import jsonify, g, request, current_app
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 def exception_handler(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as e:
-            print(f"Error in {func.__name__}: {e}")  # Log the error for debugging
-            return jsonify({"error": "An internal error occurred", "details": str(e)}), 500
+        except Exception as e: # pylint: disable=broad-exception-caught
+            print(f"Error in {func.__name__}: {e}")
+            return jsonify({"error": "An internal error occurred",
+                            "details": str(e)}), 500
     return wrapper
 
 def jwt_required():
@@ -25,12 +27,9 @@ def jwt_required():
                 payload = current_app.jwt_manager.verify_token(token)
                 g.jwt_identity = payload['sub']
                 return f(*args, **kwargs)
-            except Exception as e:
-                return jsonify({"error": str(e)}), 401
+            except ExpiredSignatureError:
+                return jsonify({"error": "Token has expired"}), 401
+            except InvalidTokenError:
+                return jsonify({"error": "Invalid token"}), 401
         return decorated_function
     return decorator
-
-def get_jwt_identity():
-    return g.jwt_identity if hasattr(g, 'jwt_identity') else None
-
-
