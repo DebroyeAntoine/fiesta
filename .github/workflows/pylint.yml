@@ -10,7 +10,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository
@@ -37,5 +37,5 @@ jobs:
     - name: Run pylint
       working-directory: ./backend
       run: |
-        poetry run pylint **/*.py
+        poetry run pylint $(find . -name "*.py")
 
