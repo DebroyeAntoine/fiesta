@@ -1,14 +1,28 @@
-from flask import jsonify, Blueprint, request
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, decode_token
+from flask import g, jsonify, Blueprint, request, current_app
 from app.models import db, User, Round, Player, bcrypt, PlayerRound, Game, PlayerAssociation, WordEvolution
 from app.utils.loader import load_from_file
 from app.socket import socketio
 from flask_socketio import emit, join_room, leave_room
-from app.utils.decorator import exception_handler
+from app.utils.decorator import exception_handler, jwt_required
 import random
 from sqlalchemy.sql import func
 from sqlalchemy.types import  Integer
 from sqlalchemy.orm import  aliased
+
+
+def get_jwt_identity():
+    return int(g.jwt_identity) if hasattr(g, 'jwt_identity') else None
+
+def decode_token(token):
+    """Helper function pour décoder les tokens dans les websockets"""
+    if not token:
+        raise Exception("No token provided")
+    return current_app.jwt_manager.verify_token(token)
+
+@jwt_required()
+def example_function():
+    pass
+
 
 CHARACTERS_FILE_PATH = 'app/utils/characters.txt'
 characters = load_from_file(CHARACTERS_FILE_PATH)
@@ -42,9 +56,13 @@ def register():
     new_user = User(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
-    access_token = create_access_token(identity=new_user.id)
-
-    return jsonify({"message": "User created successfully.", 'token': access_token}), 200
+    token_pair = current_app.jwt_manager.create_token_pair(new_user.id)
+    print(token_pair)
+    return jsonify({
+        "message": "User created successfully.",
+        'token': token_pair.access_token,
+        'refresh_token': token_pair.refresh_token
+    }), 200
 
 @auth_bp.route('/delete', methods=['DELETE'])
 @exception_handler
@@ -265,8 +283,12 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password, password):
-        access_token = create_access_token(identity=user.id)
-        return jsonify({"message": "Login successful!", 'token': access_token}), 200 #, 'gameId': "1", "roundId":"1", "playerId": str(player.id)}), 200
+        token_pair = current_app.jwt_manager.create_token_pair(user.id)
+        return jsonify({
+            "message": "Login successful!.",
+            'token': token_pair.access_token,
+            'refresh_token': token_pair.refresh_token
+        }), 200
     else:
         return jsonify({"message": "Invalid username or password."}), 401
 

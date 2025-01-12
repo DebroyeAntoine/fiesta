@@ -4,8 +4,6 @@ from flask_jwt_extended import JWTManager
 from app.socket import socketio
 
 app = create_app()
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(minutes=15)
-jwt = JWTManager(app)
 
 # Initialize SocketIO with app
 socketio.init_app(app, async_mode='eventlet')

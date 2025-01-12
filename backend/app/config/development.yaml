@@ -6,7 +6,7 @@ database:
 
 security:
   jwt_secret: "test_secret_jwt"
-  jwt_access_expires: 900  # 15 minutes
+  jwt_access_expires: 18000  # 5 hours
   jwt_refresh_expires: 604800  # 7 days
   allowed_origins: 
     - "http://localhost:3000"
