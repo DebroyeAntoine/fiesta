@@ -38,44 +38,44 @@ def home():
     return jsonify({'message': 'Hello from Fiesta de los Muertos!'})
 
 
-@auth_bp.route('/register', methods=['POST'])
-@exception_handler
-def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-
-    if not username or not password:
-        return jsonify({"message": "Username and password are required."}), 400
-
-    existing_user = User.query.filter_by(username=username).first()
-    if existing_user:
-        return jsonify({"message": "User already exists."}), 400
-
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
-    token_pair = current_app.jwt_manager.create_token_pair(new_user.id)
-    print(token_pair)
-    return jsonify({
-        "message": "User created successfully.",
-        'token': token_pair.access_token,
-        'refresh_token': token_pair.refresh_token
-    }), 200
-
-@auth_bp.route('/delete', methods=['DELETE'])
-@exception_handler
-def delete_all():
-    print("delete")
-    try:
-        db.session.query(User).delete()
-        db.session.commit()
-        return jsonify(
-                {"message": "Tous les utilisateurs ont été supprimés."}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+#@auth_bp.route('/register', methods=['POST'])
+#@exception_handler
+#def register():
+#    data = request.get_json()
+#    username = data.get('username')
+#    password = data.get('password')
+#
+#    if not username or not password:
+#        return jsonify({"message": "Username and password are required."}), 400
+#
+#    existing_user = User.query.filter_by(username=username).first()
+#    if existing_user:
+#        return jsonify({"message": "User already exists."}), 400
+#
+#    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+#    new_user = User(username=username, password=hashed_password)
+#    db.session.add(new_user)
+#    db.session.commit()
+#    token_pair = current_app.jwt_manager.create_token_pair(new_user.id)
+#    print(token_pair)
+#    return jsonify({
+#        "message": "User created successfully.",
+#        'token': token_pair.access_token,
+#        'refresh_token': token_pair.refresh_token
+#    }), 200
+#
+#@auth_bp.route('/delete', methods=['DELETE'])
+#@exception_handler
+#def delete_all():
+#    print("delete")
+#    try:
+#        db.session.query(User).delete()
+#        db.session.commit()
+#        return jsonify(
+#                {"message": "Tous les utilisateurs ont été supprimés."}), 200
+#    except Exception as e:
+#        db.session.rollback()
+#        return jsonify({"error": str(e)}), 500
 
 
 @socketio.on('create_game')
@@ -283,23 +283,23 @@ def on_leave_game(data):
         leave_room(f"game_{game_id}")
 
 
-@auth_bp.route('/login', methods=['POST'])
-@exception_handler
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-
-    user = User.query.filter_by(username=username).first()
-    if user and bcrypt.check_password_hash(user.password, password):
-        token_pair = current_app.jwt_manager.create_token_pair(user.id)
-        return jsonify({
-            "message": "Login successful!.",
-            'token': token_pair.access_token,
-            'refresh_token': token_pair.refresh_token
-        }), 200
-
-    return jsonify({"message": "Invalid username or password."}), 401
+#@auth_bp.route('/login', methods=['POST'])
+#@exception_handler
+#def login():
+#    data = request.get_json()
+#    username = data.get('username')
+#    password = data.get('password')
+#
+#    user = User.query.filter_by(username=username).first()
+#    if user and bcrypt.check_password_hash(user.password, password):
+#        token_pair = current_app.jwt_manager.create_token_pair(user.id)
+#        return jsonify({
+#            "message": "Login successful!.",
+#            'token': token_pair.access_token,
+#            'refresh_token': token_pair.refresh_token
+#        }), 200
+#
+#    return jsonify({"message": "Invalid username or password."}), 401
 
 
 def get_player_and_round(user_id, game_id, round_id):
