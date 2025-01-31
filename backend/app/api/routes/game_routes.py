@@ -18,12 +18,12 @@ def get_games():
 def start_game(game_id):
     return game_controller.start_game(game_id)
 
-@game_bp.route('/game/<int:game_id>/remake', methods=['POST'])
-@exception_handler
-@jwt_required()
-def remake_game(game_id):
-    return game_controller.remake_game(game_id)
-
+#@game_bp.route('/game/<int:game_id>/remake', methods=['POST'])
+#@exception_handler
+#@jwt_required()
+#def remake_game(game_id):
+#    return game_controller.remake_game(game_id)
+#
 @game_bp.route('/game/<int:game_id>/quit', methods=['POST'])
 @exception_handler
 @jwt_required()

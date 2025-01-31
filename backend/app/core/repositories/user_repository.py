@@ -23,5 +23,11 @@ class UserRepository(BaseRepository):
     def add_room(self, user_id, room):
         user = self.find_by_user_id(user_id)
         rooms = user.get_rooms()
+        print(f"les rooms sont {rooms}")
         rooms.append(room)
         user.set_rooms(rooms)
+        self.save(user)
+
+    def get_rooms(self, user_id):
+        user = self.find_by_user_id(user_id)
+        return user.get_rooms()

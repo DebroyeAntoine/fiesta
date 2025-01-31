@@ -1,5 +1,4 @@
 # app/api/controllers/game_controller.py
-# app/api/controllers/game_controller.py
 from flask import request, jsonify, g
 from app.core.services import GameService
 from app.core.repositories import UserRepository, PlayerRepository
@@ -20,10 +19,10 @@ class GameController:
         result = self.game_service.start_game(game_id, user_id)
         return result
 
-    def remake_game(self, game_id):
-        user_id = self._get_user_identity()
-        data = request.get_json()
-        result = data.get("result", False)
+    def create_game(self, user_id):
+        return self.game_service.create_game(user_id)
+
+    def remake_game(self, game_id, user_id, result):
         return self.game_service.remake_game(game_id, user_id, result)
 
     def quit_game(self, game_id):
@@ -56,14 +55,14 @@ class GameController:
         word = data.get('word')
         round_id = data.get('round_id')
         game_id = data.get('game_id')
-        return self.game_service.submit_word(user_id, data, word, round_id,
-                                             game_id)
+        return self.game_service.submit_word(user_id, word, round_id, game_id)
 
     def submit_associations(self, game_id):
         user_id = self._get_user_identity()
         data = request.get_json()
         associations = data['associations']
-        return self.game_service.handle_submit_associations(game_id, user_id, associations)
+        return self.game_service.handle_submit_association(game_id, user_id,
+                                                            associations)
 
     def get_word_evolution(self, game_id):
         word_evolution = self.game_service.get_word_evolution(game_id)
@@ -71,3 +70,9 @@ class GameController:
 
     def _get_user_identity(self):
         return int(g.jwt_identity) if hasattr(g, 'jwt_identity') else None
+
+    def join_game(self, user_id, game_id):
+        return self.game_service.join_game(user_id, game_id)
+
+    def add_existing_rooms(self, user_id):
+        return self.game_service.add_existing_rooms(user_id)

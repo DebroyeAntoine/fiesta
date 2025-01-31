@@ -3,7 +3,7 @@ from app.infrastructure.database.session import db
 import json
 
 class Game(db.Model):
-    __tablename__ = 'games'
+    __tablename__ = 'game'
 
     id = db.Column(db.Integer, primary_key=True)
     players = db.relationship('Player', backref='game', lazy=True,

@@ -2,7 +2,11 @@
 """
 Core business logic package
 """
-from .services import AuthService
-from .repositories import UserRepository
+from .services import AuthService, GameService
+from .repositories import (UserRepository, RoundRepository, GameRepository,
+                           PlayerRepository, PlayerAssociationRepository,
+                           PlayerRoundRepository, WordEvolutionRepository)
 
-__all__ = ['AuthService', 'UserRepository']
+__all__ = ['AuthService', 'UserRepository', 'GameService', 'RoundRepository',
+'GameRepository', 'PlayerRepository', 'PlayerAssociationRepository',
+'PlayerRoundRepository', 'WordEvolutionRepository']

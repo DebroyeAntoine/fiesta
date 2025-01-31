@@ -6,7 +6,7 @@ class GameRepository(BaseRepository):
     def __init__(self):
         super().__init__(Game)
 
-    def find_waiting_games(self):
+    def get_waiting_games(self):
         return Game.query.filter_by(status='waiting').all()
 
     def create_game(self, owner_id, constraints=None):
@@ -15,12 +15,21 @@ class GameRepository(BaseRepository):
             game.set_constraints(constraints)
         return self.save(game)
 
-    def find_game_by_id(self, game_id):
+    def get_game(self, game_id):
         return Game.query.get(game_id)
 
     def update_game_status(self, game_id, new_status):
-        game = self.find_game_by_id(game_id)
+        game = self.get_game(game_id)
         if game:
             game.status = new_status
             self.save(game)
         return game
+
+    def get_constraints(self, game_id):
+        game = self.get_game(game_id)
+        return game.get_constraints()
+
+    def end_game(self, game_id):
+        game = self.get_game(game_id)
+        game.status = "ended"
+        self.save(game)

@@ -6,8 +6,8 @@ JWT manager, blueprints, and SocketIO integration.
 from flask import Flask
 #from app.models import db
 from flask_sqlalchemy import SQLAlchemy
-from app.routes import game_bp, bp
-from app.api.routes import auth_bp
+#from app.routes import game_bp, bp
+from app.api.routes import auth_bp, game_bp
 from app.socket import socketio
 from app.config.config import AppConfig
 from app.security.cors import setup_cors
@@ -46,7 +46,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth_api')
     app.register_blueprint(game_bp, url_prefix='/game_api')
-    app.register_blueprint(bp)
+    #app.register_blueprint(bp)
 
     # Create the database tables
     #with app.app_context():

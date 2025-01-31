@@ -5,4 +5,5 @@ Domain models and business rules
 from .entities import (User, Game, Player, PlayerRound, WordEvolution,
                        PlayerAssociation, Round)
 
-__all__ = ['User']
+__all__ = ['User', 'Game', 'Player', 'PlayerRound', 'WordEvolution',
+'PlayerAssociation', 'Round']

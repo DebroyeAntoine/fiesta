@@ -3,7 +3,7 @@ from app.infrastructure.database.session import db
 import json
 
 class Round(db.Model):
-    __tablename__ = 'rounds'
+    __tablename__ = 'round'
 
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
