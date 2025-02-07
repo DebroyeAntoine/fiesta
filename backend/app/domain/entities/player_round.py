@@ -1,6 +1,5 @@
 # app/domain/entities/player_round.py
 from app.infrastructure.database.session import db
-import json
 
 class PlayerRound(db.Model):
     __tablename__ = 'player_round'

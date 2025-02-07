@@ -2,7 +2,6 @@
 from flask import request, jsonify, g
 from app.core.services import GameService
 from app.core.repositories import UserRepository, PlayerRepository
-import random
 
 class GameController:
     def __init__(self):

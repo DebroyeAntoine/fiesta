@@ -8,12 +8,14 @@ class PlayerAssociationRepository(BaseRepository):
     def __init__(self):
         super().__init__(PlayerAssociation)
 
+    # pylint: disable=too-many-arguments too-many-positional-arguments
     def create(self, game_id, player_id, skull_word, selected_character,
                is_correct):
         player_association  = PlayerAssociation(game_id, player_id, skull_word,
                                                selected_character, is_correct)
         return self.save(player_association)
 
+    # pylint: disable=not-callable
     def count_submitted_players(self, game_id):
         return db.session.query(func.count(
             PlayerAssociation.player_id.distinct())).filter(

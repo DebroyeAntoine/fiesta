@@ -1,6 +1,6 @@
 # app/domain/entities/game.py
-from app.infrastructure.database.session import db
 import json
+from app.infrastructure.database.session import db
 
 class Game(db.Model):
     __tablename__ = 'game'

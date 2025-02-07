@@ -1,6 +1,5 @@
 # app/domain/entities/round.py
 from app.infrastructure.database.session import db
-import json
 
 class Round(db.Model):
     __tablename__ = 'round'

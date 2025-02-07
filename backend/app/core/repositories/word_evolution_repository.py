@@ -7,6 +7,7 @@ class WordEvolutionRepository(BaseRepository):
     def __init__(self):
         super().__init__(WordEvolution)
 
+    # pylint: disable=too-many-arguments too-many-positional-arguments
     def create(self, game_id, player_id, round_id, word, character):
         word_evolution = WordEvolution(game_id=game_id, player_id=player_id,
                                        round_id=round_id, word=word,

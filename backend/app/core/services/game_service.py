@@ -1,7 +1,6 @@
 # app/core/services/game_service.py
 import random
 from flask import jsonify
-from sqlalchemy import func
 from flask_socketio import emit, join_room, leave_room
 from app.core.repositories import (
     GameRepository,
@@ -76,8 +75,7 @@ class GameService:
             emit('game_created',
                  {'game_id': new_game.id, 'success': True},broadcast=True)
             return jsonify({"success": True, "game_id": new_game.id}), 200
-        else:
-            return {"success": True, "game_id": new_game.id}
+        return {"success": True, "game_id": new_game.id}
 
 
     def remake_game(self, game_id, user_id, result):
@@ -209,7 +207,8 @@ class GameService:
         return jsonify({"message": "Word submitted successfully!"}), 200
 
     def _get_player_and_round(self, user_id, game_id, round_id):
-        current_player = self.player_repository.get_by_user_id(user_id, game_id)
+        current_player = self.player_repository.get_by_user_id(user_id,
+                                                               game_id)
         if not current_player:
             return None, None, ("Player not found", 404)
 
@@ -228,6 +227,7 @@ class GameService:
             return None, ("PlayerRound not found", 404)
         return player_round, None
 
+    # pylint: disable=too-many-arguments disable=too-many-positional-arguments
     def _handle_word_evolution(self, game_id, current_player, round_id,
                                current_round, word):
         word_evolution = (
@@ -389,7 +389,8 @@ class GameService:
                     player_id=player.id,
                     skull_word=skull_word,
                     selected_character=selected_character,
-                    is_correct=original_character.lower() == selected_character.lower()
+                    is_correct=(original_character.lower() ==
+                                selected_character.lower())
                 )
 
             # Check if all players have submitted

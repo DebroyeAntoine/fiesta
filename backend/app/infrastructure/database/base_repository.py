@@ -6,8 +6,8 @@ class BaseRepository:
         self.model_class = model_class
         self.db = db
 
-    def find_by_id(self, id):
-        return self.model_class.query.get(id)
+    def find_by_id(self, find_id):
+        return self.model_class.query.get(find_id)
 
     def save(self, entity):
         self.db.session.add(entity)

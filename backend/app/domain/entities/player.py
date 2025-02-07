@@ -1,7 +1,6 @@
 # app/domain/entities/player.py
 from app.infrastructure.database.session import db
 from app.domain.entities import User
-import json
 
 class Player(db.Model):
     __tablename__ = 'player'

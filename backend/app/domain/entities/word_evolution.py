@@ -1,6 +1,5 @@
 # app/domain/entities/word_evolution.py
 from app.infrastructure.database.session import db
-import json
 
 class WordEvolution(db.Model):
     __tablename__ = 'word_evolution'

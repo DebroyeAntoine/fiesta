@@ -1,6 +1,5 @@
 # app/domain/entities/player_association.py
 from app.infrastructure.database.session import db
-import json
 
 class PlayerAssociation(db.Model):
     __tablename__ = 'player_association'
@@ -12,6 +11,7 @@ class PlayerAssociation(db.Model):
     selected_character = db.Column(db.String, nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
 
+    # pylint: disable=too-many-arguments disable=too-many-positional-arguments
     def __init__(self, game_id, player_id, skull_word, selected_character,
                  is_correct):
         self.game_id = game_id
