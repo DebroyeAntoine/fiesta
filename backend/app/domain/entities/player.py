@@ -1,6 +1,6 @@
 # app/domain/entities/player.py
 from app.infrastructure.database.session import db
-from app.domain.entities import User
+from app.domain.entities.user import User
 
 class Player(db.Model):
     __tablename__ = 'player'
@@ -19,5 +19,5 @@ class Player(db.Model):
     player_rounds = db.relationship('PlayerRound', backref='player', lazy=True,
                                     cascade='all, delete-orphan')
     def __repr__(self):
-        return f'<Player {self.username} playing as {self.id} with user "\
+        return f'<Player {self.id} playing  with user "\
                 "{self.user_id}>'

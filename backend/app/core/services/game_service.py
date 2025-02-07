@@ -95,7 +95,6 @@ class GameService:
         game = self.game_repository.get_game(game_id)
         players = self.player_repository.get_game_players(game_id=game_id)
         player_usernames = [player.username for player in players]
-        #player_usernames = [player.user.username for player in players]
         is_owner = game.owner_id == user_id
         return {'players': player_usernames, 'isOwner': is_owner}
 
