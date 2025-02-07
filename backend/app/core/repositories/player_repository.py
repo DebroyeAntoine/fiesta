@@ -9,6 +9,10 @@ class PlayerRepository(BaseRepository):
     def get_game_players(self, game_id):
         return Player.query.filter_by(game_id=game_id).all()
 
+    def get_game_players_expect_owner(self, game_id, game):
+        return Player.query.filter_by(game_id=game_id).filter(
+                Player.user_id != game.owner_id).all()
+
     def create_player(self, user_id, game_id):
         player = Player(user_id, game_id)
         print(player)
@@ -22,3 +26,6 @@ class PlayerRepository(BaseRepository):
 
     def get_existing(self, user_id, game_id):
         return Player.query.filter_by(game_id=game_id,user_id=user_id).first()
+
+    def delete_player(self, player):
+        self.delete(player)

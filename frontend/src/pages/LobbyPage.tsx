@@ -37,7 +37,7 @@ const Lobby: React.FC = () => {
             const token = localStorage.getItem("token");
             socket.emit("leave_game", {
                 game_id: gameId,
-                player_token: token,
+                token: token,
             });
         }
     }, [socket, gameId]);

@@ -25,7 +25,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         const token = localStorage.getItem("token");
         socket.emit("leave_game", {
             game_id: game_id,
-            player_token: token,
+            token: token,
         });
     }, [socket, game_id]);
     const handleQuit = async () => {

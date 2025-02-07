@@ -64,23 +64,17 @@ class GameService:
         return jsonify({"message": "Fail to start the game"}), 401
 
     def create_game(self, user_id, constraints=None, remake=False):
-        print("111")
         new_game = self.game_repository.create_game(owner_id=user_id,
                                                        constraints=constraints)
-        print("112")
         self.round_repository.create_round(game_id=new_game.id,
                                            round_number=1)
         self.player_repository.create_player(user_id=user_id,
                                          game_id=new_game.id)
         join_room(f"game_{new_game.id}")
-        print("113")
-        print(new_game.id)
         self.user_repository.add_room(user_id, f"game_{new_game.id}")
-        print("114")
         if not remake:
             emit('game_created',
                  {'game_id': new_game.id, 'success': True},broadcast=True)
-            print("115")
             return jsonify({"success": True, "game_id": new_game.id}), 200
         else:
             return {"success": True, "game_id": new_game.id}
@@ -93,7 +87,6 @@ class GameService:
         else:
             constraints = self._randomize_constraints(len(constraints))
         create = self.create_game(user_id, constraints, True)
-        print(create)
         socketio.emit('new_game', {'game_id': create['game_id']},
                       room=f"game_{game_id}")
 
@@ -103,7 +96,6 @@ class GameService:
     def get_lobby_details(self, game_id, user_id):
         game = self.game_repository.get_game(game_id)
         players = self.player_repository.get_game_players(game_id=game_id)
-        print(players)
         player_usernames = [player.username for player in players]
         #player_usernames = [player.user.username for player in players]
         is_owner = game.owner_id == user_id
@@ -461,7 +453,6 @@ class GameService:
         if not existing_player:
             self.player_repository.create_player(user_id, game_id)
             self._update_player_list(game_id)
-        print("coucou")
 
         join_room(f"game_{game_id}")
         self.user_repository.add_room(user.id, f"game_{game_id}")
@@ -480,7 +471,25 @@ class GameService:
 
     def add_existing_rooms(self, user_id):
         rooms = self.user_repository.get_rooms(user_id)
-        print(f"rooms {rooms}")
         for room in rooms:
             join_room(room)
 
+    def leave_game(self, user_id, game_id):
+        game = self.game_repository.get_game(game_id)
+        player = self.player_repository.get_by_user_id(user_id, game_id)
+        self.user_repository.rm_room(user_id, f"game_{game_id}")
+        players = self.player_repository.get_game_players_expect_owner(game_id,
+                                                                       game)
+        if game and player:
+            if game.owner_id == user_id:
+                # Get all players execpted the owner
+                if len(players) > 0:
+                    self.game_repository.set_owner(game_id, players[0].user_id)
+                    emit('changing_ownership', {}, room=f"game_{game_id}")
+                else:
+                    self.game_repository.set_status(game_id, 'ended')
+            self.player_repository.delete_player(player)
+            players = self.player_repository.get_game_players(game_id)
+            emit('players_update', {'players': players},
+                 room=f"game_{game_id}")
+            leave_room(f"game_{game_id}")

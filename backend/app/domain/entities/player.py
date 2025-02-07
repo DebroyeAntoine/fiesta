@@ -19,6 +19,6 @@ class Player(db.Model):
         return User.query.get(self.user_id).username
     player_rounds = db.relationship('PlayerRound', backref='player', lazy=True,
                                     cascade='all, delete-orphan')
-    #def __repr__(self):
-    #    return f'<Player {self.user.username} playing as {self.id} with user "\
-    #            "{self.user_id}>'
+    def __repr__(self):
+        return f'<Player {self.username} playing as {self.id} with user "\
+                "{self.user_id}>'

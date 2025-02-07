@@ -33,3 +33,13 @@ class GameRepository(BaseRepository):
         game = self.get_game(game_id)
         game.status = "ended"
         self.save(game)
+
+    def set_owner(self, game_id, future_owner):
+        game = self.get_game(game_id)
+        game.owner_id = future_owner
+        self.save(game)
+
+    def set_status(self, game_id, status):
+        game = self.get_game(game_id)
+        game.status = status
+        self.save(game)

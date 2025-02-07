@@ -76,3 +76,6 @@ class GameController:
 
     def add_existing_rooms(self, user_id):
         return self.game_service.add_existing_rooms(user_id)
+
+    def leave_game(self, user_id, game_id):
+        return self.game_service.leave_game(user_id, game_id)

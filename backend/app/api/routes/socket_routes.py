@@ -15,9 +15,8 @@ def decode_token(token):
 @socketio.on('create_game')
 @exception_handler
 def create_game(data):
-    print("test")
     user_id = decode_token(data.get('token'))['sub']
-    return game_controller.create_game(user_id=user_id)
+    game_controller.create_game(user_id=user_id)
 
 @socketio.on('remake')
 @exception_handler
@@ -51,8 +50,12 @@ def handle_advance_reveal(data):
 @socketio.on('join_room')
 @exception_handler
 def on_join_room(data):
-    print("test")
     user_id = decode_token(data.get('token'))['sub']
     game_controller.add_existing_rooms(user_id)
 
-#@socketio.on('leave_game'
+@socketio.on('leave_game')
+@exception_handler
+def on_leave_game(data):
+    user_id = int(decode_token(data.get('token'))['sub'])
+    game_id = data['game_id']
+    game_controller.leave_game(user_id, game_id)
