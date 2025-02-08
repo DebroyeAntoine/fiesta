@@ -17,6 +17,8 @@ const Register: React.FC = () => {
         if (!response.ok) {
             throw new Error("Failed to register");
         } else {
+            console.log(data);
+            console.log(data.token);
             localStorage.setItem("token", data.token);
             navigate("/gameList");
             //navigate(`/game/${data.gameId}`);

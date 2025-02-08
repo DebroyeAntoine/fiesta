@@ -25,7 +25,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         const token = localStorage.getItem("token");
         socket.emit("leave_game", {
             game_id: game_id,
-            player_token: token,
+            token: token,
         });
     }, [socket, game_id]);
     const handleQuit = async () => {
@@ -57,23 +57,29 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
 
         try {
-            const response = await fetch(`/game_api/game/${game_id}/remake`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ result: result }),
+            socket.emit("remake", {
+                token: localStorage.getItem("token"),
+                game_id: game_id,
+                result: result,
             });
-            if (response.ok) {
-                const data = await response.json();
-                navigate(`/game/${data.game_id}/lobby`);
-            }
+            //const response = await fetch(`/game_api/game/${game_id}/remake`, {
+            //    method: "POST",
+            //    headers: {
+            //        "Content-Type": "application/json",
+            //        Authorization: `Bearer ${token}`,
+            //    },
+            //    body: JSON.stringify({ result: result }),
+            //});
+            //if (response.ok) {
+            //const data = await response.json();
+            //navigate(`/game/${data.game_id}/lobby`);
+            //}
         } catch (error) {}
     };
     useEffect(() => {
         const socketListeners = {
             new_game: (data: Game) => {
+                console.log("test");
                 console.log(data);
                 socket.emit("join_game", {
                     token: localStorage.getItem("token"),
